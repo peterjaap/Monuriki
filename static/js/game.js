@@ -4,7 +4,7 @@
 
 var stage;
 var queue;
-var game;
+var shangrila;
 
 window.addEventListener('resize', redrawCanvas, false);
 
@@ -13,45 +13,50 @@ $(document).ready(function () {
 
     queue = new createjs.LoadQueue(false);
     queue.installPlugin(createjs.Sound);
-    queue.addEventListener('complete', init);
+    queue.addEventListener('complete', initGame);
     queue.loadManifest([{id:'village',src:'images/fortress.png'}]);
 });
 
+function initGame() {
+    shangrila = new Shangrila();
+    redrawCanvas();
+}
+
 function redrawCanvas() {
-    stage.canvas.width = window.innerWidth;
-    stage.canvas.height = window.innerHeight;
     stage = new createjs.Stage('gamecanvas');
-    game.drawBridges();
-    game.drawVillages();
+    stage.canvas.width = window.innerWidth*0.8;
+    stage.canvas.height = window.innerHeight;
+
+    var graphics = new createjs.Graphics().beginFill('lightblue').drawRect(0, 0, stage.canvas.width, stage.canvas.height);
+    var shape = new createjs.Shape(graphics);
+    stage.addChild(shape);
+
+    shangrila.drawBridges();
+    shangrila.drawVillages();
+    //shangrila.drawStoneOfTheWiseMen(3);
 }
 
 function tick() {
     stage.update();
 }
 
-function init() {
-    stage = new createjs.Stage('gamecanvas');
-    game = new Game();
-    redrawCanvas();
-}
-
-function Game() {
+function Shangrila() {
     /* Define positions of villages */
     this.villages = Array();
-    this.villages[1] = {top:5,left:13 };
-    this.villages[2] = {top:36, left:19 };
-    this.villages[3] = {top:64, left:11 };
-    this.villages[4] = {top:5, left:48 };
-    this.villages[5] = {top:23, left:38 };
-    this.villages[6] = {top:49, left:41 };
-    this.villages[7] = {top:79, left:33 };
-    this.villages[8] = {top:21, left:64 };
-    this.villages[9] = {top:38, left:61 };
-    this.villages[10] = {top:78, left:63 };
-    this.villages[11] = {top:9, left:78 };
-    this.villages[12] = {top:40, left:82 };
-    this.villages[13] = {top:57, left:75 };
-    this.villageWidth = 0.1;
+    this.villages[1] = {top:5,left:8 };
+    this.villages[2] = {top:36, left:14 };
+    this.villages[3] = {top:64, left:6 };
+    this.villages[4] = {top:5, left:43 };
+    this.villages[5] = {top:23, left:33 };
+    this.villages[6] = {top:49, left:36 };
+    this.villages[7] = {top:79, left:28 };
+    this.villages[8] = {top:21, left:59 };
+    this.villages[9] = {top:38, left:56 };
+    this.villages[10] = {top:78, left:74 };
+    this.villages[11] = {top:9, left:73 };
+    this.villages[12] = {top:40, left:77 };
+    this.villages[13] = {top:57, left:70 };
+    this.villageWidth = 0.12;
     this.villageHeight = 0.12;
 
     /* Define the bridges that connect the villages
@@ -83,7 +88,7 @@ function Game() {
     this.bridges[23] = {from:8, to:9};
 }
 
-Game.prototype.drawVillages = function() {
+Shangrila.prototype.drawVillages = function() {
     /* Loop through villages */
     for(i=1;i<this.villages.length;i++) {
         /* Get and calculate village positions and edges */
@@ -101,10 +106,16 @@ Game.prototype.drawVillages = function() {
         village.scaleX = width / bounds.width;
         village.scaleY = height / bounds.height;
         stage.addChild(village);
+
+        var text = new createjs.Text(i,'20px Arial','#000');
+        text.x = x+width/2;
+        text.y = y+height/2;
+        text.textBaseline = 'alphabetic';
+        stage.addChild(text);
     }
 }
 
-Game.prototype.drawBridges = function() {
+Shangrila.prototype.drawBridges = function() {
     /* Loop through bridges */
     for(i=1;i<this.bridges.length;i++) {
         var width = stage.canvas.clientWidth * this.villageWidth;
@@ -133,15 +144,16 @@ Game.prototype.drawBridges = function() {
     }
 }
 
-Game.prototype.drawStoneOfTheWiseMen = function(village_id) {
+Shangrila.prototype.drawStoneOfTheWiseMen = function(village_id) {
     var width = stage.canvas.clientWidth * this.villageWidth;
     var height = stage.canvas.clientHeight * this.villageHeight;
 
-    var x = stage.canvas.clientWidth * (this.villages[village_id]['left']/100) + height/2;
+    var x = stage.canvas.clientWidth * (this.villages[village_id]['left']/100) + width/2;
     var y = stage.canvas.clientHeight * (this.villages[village_id]['top']/100) + height/2;
 
-    this.ctx.beginPath();
-    this.ctx.arc(x, y, 15, 0, 2 * Math.PI, false);
-    this.ctx.fillStyle = 'lightblue';
-    this.ctx.fill();
+    var stone = new createjs.Shape();
+    stone.graphics.beginFill('lightblue').drawCircle(0,0,stage.canvas.clientWidth/90);
+    stone.x = x;
+    stone.y = y;
+    stage.addChild(stone);
 }

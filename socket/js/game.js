@@ -144,8 +144,8 @@ Game.prototype.resizeCanvas = function() {
 $(document).ready(function () {
     var game = new Game();
 
-    /* Preload game assets
-     @TODO add a preloader screen when game gets asset-heavy
+    /* Preload shangrila assets
+     @TODO add a preloader screen when shangrila gets asset-heavy
      */
     var preloader = html5Preloader();
     preloader.addFiles('socket.io/images/fortress.png');
