@@ -54,13 +54,15 @@ function Game() {
     this.bridges[22] = {from:8, to:12};
     this.bridges[23] = {from:8, to:9};
 
+    window.addEventListener('resize', this.resizeCanvas, false);
+
 }
 
 Game.prototype.drawVillages = function() {
     this.ctx.beginPath();
 
     var image = new Image();
-    image.src = 'images/fortress.png';
+    image.src = 'socket.io/images/fortress.png';
 
     for(i=1;i<this.villages.length;i++) {
         /* Get and calculate village positions and edges */
@@ -124,20 +126,27 @@ Game.prototype.drawStoneOfTheWiseMen = function(village_id) {
     }
 }*/
 
+Game.prototype.resizeCanvas = function() {
+    var canvas = document.getElementById('gamecanvas'),
+        context = canvas.getContext('2d');
+    canvas.width = window.innerWidth*0.8;
+    canvas.height = window.innerHeight;
+
+    this.drawBridges();
+    this.drawVillages();
+    //this.drawGuilds();
+}
+
 $(document).ready(function () {
     var game = new Game();
 
     /* Preload game assets
-        @TODO add a preloader screen when game gets asset-heavy
+     @TODO add a preloader screen when game gets asset-heavy
      */
     var preloader = html5Preloader();
-    preloader.addFiles('images/fortress.png');
+    preloader.addFiles('socket.io/images/fortress.png');
     /* When preloader is finished, draw bridges & villages */
     preloader.on('finish', function(){
-        game.drawBridges();
-        game.drawVillages();
-        //game.drawGuilds();
+        game.resizeCanvas();
     });
-
-
 });
