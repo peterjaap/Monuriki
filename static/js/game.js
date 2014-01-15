@@ -6,6 +6,8 @@ var stage;
 var queue;
 var shangrila;
 
+var identify = true;
+
 window.addEventListener('resize', redrawCanvas, false);
 
 $(document).ready(function () {
@@ -107,11 +109,13 @@ Shangrila.prototype.drawVillages = function() {
         village.scaleY = height / bounds.height;
         stage.addChild(village);
 
-        var text = new createjs.Text(i,'20px Arial','#000');
-        text.x = x+width/2;
-        text.y = y+height/2;
-        text.textBaseline = 'alphabetic';
-        stage.addChild(text);
+        if(identify) {
+            var text = new createjs.Text(i,'20px Arial','#ff0000');
+            text.x = x+width/2;
+            text.y = y+height/2;
+            text.textBaseline = 'alphabetic';
+            stage.addChild(text);
+        }
     }
 }
 
@@ -141,6 +145,14 @@ Shangrila.prototype.drawBridges = function() {
         line.graphics.lineTo(to_x,to_y);
         line.graphics.endStroke();
         stage.addChild(line);
+
+        if(identify) {
+            var text = new createjs.Text(i,'20px Arial','#0000ff');
+            text.x = from_x+((to_x-from_x)/2);
+            text.y = from_y+((to_y-from_y)/2);
+            text.textBaseline = 'alphabetic';
+            stage.addChild(text);
+        }
     }
 }
 
