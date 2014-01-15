@@ -28,8 +28,11 @@ function redrawCanvas() {
     stage = new createjs.Stage('gamecanvas');
     stage.canvas.width = window.innerWidth;
     stage.canvas.height = window.innerHeight;
+
     shangrila.gameboardWidth = stage.canvas.width*0.8;
-    shangrila.controldeckWidth = stage.canvas.width*0.8;
+    shangrila.gameboardHeight = stage.canvas.height;
+    shangrila.controldeckWidth = stage.canvas.width*0.2;
+    shangrila.controldeckHeight = stage.canvas.height;
 
     /* Draw background game board */
     var graphicsGamecanvas = new createjs.Graphics().beginFill('lightblue').drawRect(0, 0, shangrila.gameboardWidth, stage.canvas.height);
@@ -43,7 +46,7 @@ function redrawCanvas() {
 
     shangrila.drawBridges();
     shangrila.drawVillages();
-    //shangrila.drawStoneOfTheWiseMen(3);
+    shangrila.drawGuildShields();
 }
 
 function tick() {
@@ -215,5 +218,56 @@ Shangrila.prototype.recalculateStoneOfTheWiseMenPlacings = function() {
             console.log('Village ' + i + ' is not connected anymore; place stone of the wise men!');
             shangrila.drawStoneOfTheWiseMen(i);
         }
+    }
+    if(connected.length == 0) {
+        alert('Game ends!');
+    }
+}
+
+Shangrila.prototype.drawGuildShields = function() {
+    var guilds = ['Healer','Dragonbreather','Firekeeper','Priest','Rainmaker','Astrologer','Yeti-whisperer'];
+    var noGuildsOnSingleRow = 4;
+    var guildWidth = (shangrila.controldeckWidth * 0.6) / noGuildsOnSingleRow;
+    var padding = (shangrila.controldeckWidth * 0.05);
+    var guildHeight = guildWidth;
+
+    for(i=1;i<=guilds.length;i++) {
+        if(i > noGuildsOnSingleRow) {
+            var y = (shangrila.gameboardHeight * 0.05) + (guildHeight * 1.8);
+            j = i-noGuildsOnSingleRow;
+        } else {
+            var y = (shangrila.gameboardHeight * 0.05);
+            j = i;
+        }
+        var x = shangrila.gameboardWidth + ((guildWidth + padding) * j) - guildWidth / 2;
+        var guild = new createjs.Graphics().beginFill('black').drawRect(
+            x,
+            y,
+            guildWidth,
+            guildHeight
+        );
+        var guildShape = new createjs.Shape(guild);
+        stage.addChild(guildShape);
+        var guildAmount = new createjs.Graphics().beginFill('grey').drawRect(
+            x,
+            y+guildHeight,
+            guildWidth,
+            guildHeight*0.6
+        );
+        var guildAmountShape = new createjs.Shape(guildAmount);
+        stage.addChild(guildAmountShape);
+
+        var initial = new createjs.Text(guilds[i-1].substr(0,1),'20px Arial','#fff');
+        initial.x = x+guildWidth*0.30;
+        initial.y = y+guildHeight*0.70;
+        initial.textBaseline = 'alphabetic';
+        stage.addChild(initial);
+
+        var amount = new createjs.Text('6','15px Arial','#fff');
+        amount.x = x+guildWidth*0.4;
+        amount.y = y+guildHeight*1.43;
+        amount.y = y+guildHeight*1.43;
+        amount.textBaseline = 'alphabetic';
+        stage.addChild(amount);
     }
 }
