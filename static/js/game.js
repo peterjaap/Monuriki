@@ -26,12 +26,20 @@ function initGame() {
 
 function redrawCanvas() {
     stage = new createjs.Stage('gamecanvas');
-    stage.canvas.width = window.innerWidth*0.8;
+    stage.canvas.width = window.innerWidth;
     stage.canvas.height = window.innerHeight;
+    shangrila.gameboardWidth = stage.canvas.width*0.8;
+    shangrila.controldeckWidth = stage.canvas.width*0.8;
 
-    var graphics = new createjs.Graphics().beginFill('lightblue').drawRect(0, 0, stage.canvas.width, stage.canvas.height);
-    var shape = new createjs.Shape(graphics);
-    stage.addChild(shape);
+    /* Draw background game board */
+    var graphicsGamecanvas = new createjs.Graphics().beginFill('lightblue').drawRect(0, 0, shangrila.gameboardWidth, stage.canvas.height);
+    var backgroundGamecanvas = new createjs.Shape(graphicsGamecanvas);
+    stage.addChild(backgroundGamecanvas);
+
+    /* Draw background control deck */
+    var graphicsControldeck = new createjs.Graphics().beginFill('#7ec1d7').drawRect(shangrila.gameboardWidth, 0, shangrila.controldeckWidth, stage.canvas.height);
+    var backgroundControldeck = new createjs.Shape(graphicsControldeck);
+    stage.addChild(backgroundControldeck);
 
     shangrila.drawBridges();
     shangrila.drawVillages();
@@ -94,19 +102,23 @@ Shangrila.prototype.drawVillages = function() {
     /* Loop through villages */
     for(i=1;i<this.villages.length;i++) {
         /* Get and calculate village positions and edges */
-        var x = stage.canvas.clientWidth * (this.villages[i]['left']/100);
+        var x = shangrila.gameboardWidth * (this.villages[i]['left']/100);
         var y = stage.canvas.clientHeight * (this.villages[i]['top']/100);
-        var width = stage.canvas.clientWidth * this.villageWidth;
+        var width = shangrila.gameboardWidth * this.villageWidth;
         var height = stage.canvas.clientHeight * this.villageHeight;
 
         /* Add image to stage */
         var village = new createjs.Bitmap(queue.getResult('village'));
-        console.log('Adding village to stage on position ' + x + ', ' + y + ' dimensions ' + width + 'x' + height);
+        //console.log('Adding village to stage on position ' + x + ', ' + y + ' dimensions ' + width + 'x' + height);
         village.x = x;
         village.y = y;
         bounds = village.getBounds();
         village.scaleX = width / bounds.width;
         village.scaleY = height / bounds.height;
+        village.village_id = i;
+        /*village.addEventListener('click', function(event) {
+            shangrila.drawStoneOfTheWiseMen(event.target.village_id);
+        });*/
         stage.addChild(village);
 
         if(identify) {
@@ -122,29 +134,30 @@ Shangrila.prototype.drawVillages = function() {
 Shangrila.prototype.drawBridges = function() {
     /* Loop through bridges */
     for(i=1;i<this.bridges.length;i++) {
-        var width = stage.canvas.clientWidth * this.villageWidth;
+        var width = shangrila.gameboardWidth * this.villageWidth;
         var height = stage.canvas.clientHeight * this.villageHeight;
 
         /* Get x and y positions for source and target villages from villages object */
         from = this.villages[this.bridges[i]['from']];
         to = this.villages[this.bridges[i]['to']];
 
-        var from_x = stage.canvas.clientWidth * (from['left']/100) + height/2;
+        var from_x = shangrila.gameboardWidth * (from['left']/100) + width/2;
         var from_y = stage.canvas.clientHeight * (from['top']/100) + height/2;
 
-        var to_x = stage.canvas.clientWidth * (to['left']/100) + height/2;
+        var to_x = shangrila.gameboardWidth * (to['left']/100) + width/2;
         var to_y = stage.canvas.clientHeight * (to['top']/100) + height/2;
 
         /* Draw line */
-        var line = new createjs.Shape();
-        line.graphics.setStrokeStyle(1);
-        line.graphics.beginStroke('#000');
+        var bridge = new createjs.Shape();
+        bridge.graphics.setStrokeStyle(1);
+        bridge.graphics.beginStroke('#000');
 
-        console.log('Drawing a line from ' + from_x + 'x' + from_y + ' to ' + to_x + 'x' + to_y);
-        line.graphics.moveTo(from_x,from_y);
-        line.graphics.lineTo(to_x,to_y);
-        line.graphics.endStroke();
-        stage.addChild(line);
+        //console.log('Drawing a line from ' + from_x + 'x' + from_y + ' to ' + to_x + 'x' + to_y);
+        bridge.graphics.moveTo(from_x,from_y);
+        bridge.graphics.lineTo(to_x,to_y);
+        bridge.graphics.endStroke();
+        bridge.bridge_id = i;
+        stage.addChild(bridge);
 
         if(identify) {
             var text = new createjs.Text(i,'20px Arial','#0000ff');
@@ -157,14 +170,14 @@ Shangrila.prototype.drawBridges = function() {
 }
 
 Shangrila.prototype.drawStoneOfTheWiseMen = function(village_id) {
-    var width = stage.canvas.clientWidth * this.villageWidth;
+    var width = shangrila.gameboardWidth * this.villageWidth;
     var height = stage.canvas.clientHeight * this.villageHeight;
 
-    var x = stage.canvas.clientWidth * (this.villages[village_id]['left']/100) + width/2;
+    var x = shangrila.gameboardWidth * (this.villages[village_id]['left']/100) + width/2;
     var y = stage.canvas.clientHeight * (this.villages[village_id]['top']/100) + height/2;
 
     var stone = new createjs.Shape();
-    stone.graphics.beginFill('lightblue').drawCircle(0,0,stage.canvas.clientWidth/90);
+    stone.graphics.beginFill('lightblue').drawCircle(0,0,shangrila.gameboardWidth/90);
     stone.x = x;
     stone.y = y;
     stage.addChild(stone);
