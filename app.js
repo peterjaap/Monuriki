@@ -14,11 +14,12 @@ io.static.add('/images/fortress.png', {mime: {
 app.listen(80);
 
 function handler (req, res) {
-    fs.readFile(__dirname + '/test.html',
+    var htmlFile = 'index.html';
+    fs.readFile(__dirname + '/' + htmlFile,
         function (err, data) {
             if (err) {
                 res.writeHead(500);
-                return res.end('Error loading test.html');
+                return res.end('Error loading ' + htmlFile);
             }
 
             res.writeHead(200);

@@ -23,8 +23,6 @@ function Game() {
     this.villages[13] = {top:57, left:75 };
     this.villageWidth = 0.1;
     this.villageHeight = 0.12;
-    this.canvasWidth = this.gameboard.width();
-    this.canvasHeight = this.gameboard.height();
 
     /* Define the bridges that connect the villages
     * From and to refers to index key in the this.villages object above
@@ -129,8 +127,14 @@ Game.prototype.drawStoneOfTheWiseMen = function(village_id) {
 Game.prototype.resizeCanvas = function() {
     var canvas = document.getElementById('gamecanvas'),
         context = canvas.getContext('2d');
+
+    /* Make actual canvas the size of the window */
     canvas.width = window.innerWidth*0.8;
     canvas.height = window.innerHeight;
+
+    /* Set variables to use within other functions */
+    this.canvasWidth = canvas.width;
+    this.canvasHeight = canvas.height;
 
     this.drawBridges();
     this.drawVillages();
