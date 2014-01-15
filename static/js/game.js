@@ -116,6 +116,7 @@ Shangrila.prototype.drawVillages = function() {
         village.scaleX = width / bounds.width;
         village.scaleY = height / bounds.height;
         village.village_id = i;
+        village.name = 'village_' + i;
         /*village.addEventListener('click', function(event) {
             shangrila.drawStoneOfTheWiseMen(event.target.village_id);
         });*/
@@ -149,7 +150,7 @@ Shangrila.prototype.drawBridges = function() {
 
         /* Draw line */
         var bridge = new createjs.Shape();
-        bridge.graphics.setStrokeStyle(1);
+        bridge.graphics.setStrokeStyle(10);
         bridge.graphics.beginStroke('#000');
 
         //console.log('Drawing a line from ' + from_x + 'x' + from_y + ' to ' + to_x + 'x' + to_y);
@@ -157,6 +158,11 @@ Shangrila.prototype.drawBridges = function() {
         bridge.graphics.lineTo(to_x,to_y);
         bridge.graphics.endStroke();
         bridge.bridge_id = i;
+        bridge.name = 'bridge_' + i;
+        bridge.addEventListener('click', function(event) {
+            stage.removeChild(event.target);
+            shangrila.recalculateStoneOfTheWiseMenPlacings();
+        });
         stage.addChild(bridge);
 
         if(identify) {
@@ -181,4 +187,33 @@ Shangrila.prototype.drawStoneOfTheWiseMen = function(village_id) {
     stone.x = x;
     stone.y = y;
     stage.addChild(stone);
+}
+
+Array.prototype.diff = function(a) {
+    return this.filter(function(i) {return !(a.indexOf(i) > -1);});
+};
+
+Shangrila.prototype.recalculateStoneOfTheWiseMenPlacings = function() {
+    var connected = new Array();
+    for(i=1;i<this.bridges.length;i++) {
+        var bridgeObject = stage.getChildByName('bridge_' + i);
+        if(bridgeObject) {
+            if(this.bridges[bridgeObject.bridge_id]) {
+                var from = this.bridges[bridgeObject.bridge_id].from;
+                var to = this.bridges[bridgeObject.bridge_id].to;
+                if(connected.indexOf(from) == -1) {
+                    connected.push(from);
+                }
+                if(connected.indexOf(to) == -1) {
+                    connected.push(to);
+                }
+            }
+        }
+    }
+    for(i=1;i<this.villages.length;i++) {
+        if(connected.indexOf(i) == -1) {
+            console.log('Village ' + i + ' is not connected anymore; place stone of the wise men!');
+            shangrila.drawStoneOfTheWiseMen(i);
+        }
+    }
 }
