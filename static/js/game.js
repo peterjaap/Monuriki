@@ -8,9 +8,16 @@ var shangrila;
 
 var identify = true;
 
-window.addEventListener('resize', redrawCanvas, false);
+var keepAspectRatio = true;
+var initialWidth;
+var initialHeight;
+
+window.addEventListener('resize', onResize, false);
 
 $(document).ready(function () {
+    initialWidth = window.innerWidth;
+    initialHeight = window.innerHeight;
+
     createjs.Ticker.addEventListener("tick", tick);
 
     queue = new createjs.LoadQueue(false);
@@ -20,33 +27,15 @@ $(document).ready(function () {
 });
 
 function initGame() {
-    shangrila = new Shangrila();
-    redrawCanvas();
-}
-
-function redrawCanvas() {
     stage = new createjs.Stage('gamecanvas');
+    createjs.Touch.enable(stage);
+    stage.enableMouseOver(20);
+
     stage.canvas.width = window.innerWidth;
     stage.canvas.height = window.innerHeight;
 
-    shangrila.gameboardWidth = stage.canvas.width*0.8;
-    shangrila.gameboardHeight = stage.canvas.height;
-    shangrila.controldeckWidth = stage.canvas.width*0.2;
-    shangrila.controldeckHeight = stage.canvas.height;
-
-    /* Draw background game board */
-    var graphicsGamecanvas = new createjs.Graphics().beginFill('lightblue').drawRect(0, 0, shangrila.gameboardWidth, stage.canvas.height);
-    var backgroundGamecanvas = new createjs.Shape(graphicsGamecanvas);
-    stage.addChild(backgroundGamecanvas);
-
-    /* Draw background control deck */
-    var graphicsControldeck = new createjs.Graphics().beginFill('#7ec1d7').drawRect(shangrila.gameboardWidth, 0, shangrila.controldeckWidth, stage.canvas.height);
-    var backgroundControldeck = new createjs.Shape(graphicsControldeck);
-    stage.addChild(backgroundControldeck);
-
-    shangrila.drawBridges();
-    shangrila.drawVillages();
-    shangrila.drawGuildShields();
+    shangrila = new Shangrila();
+    shangrila.initNewGame();
 }
 
 function tick() {
@@ -101,6 +90,27 @@ function Shangrila() {
     this.bridges[23] = {from:8, to:9};
 }
 
+Shangrila.prototype.initNewGame = function() {
+    this.gameboardWidth = stage.canvas.width*0.8;
+    this.gameboardHeight = stage.canvas.height;
+    this.controldeckWidth = stage.canvas.width*0.2;
+    this.controldeckHeight = stage.canvas.height;
+
+    /* Draw background game board */
+    var graphicsGamecanvas = new createjs.Graphics().beginFill('lightblue').drawRect(0, 0, this.gameboardWidth, stage.canvas.height);
+    var backgroundGamecanvas = new createjs.Shape(graphicsGamecanvas);
+    stage.addChild(backgroundGamecanvas);
+
+    /* Draw background control deck */
+    var graphicsControldeck = new createjs.Graphics().beginFill('#7ec1d7').drawRect(this.gameboardWidth, 0, this.controldeckWidth, stage.canvas.height);
+    var backgroundControldeck = new createjs.Shape(graphicsControldeck);
+    stage.addChild(backgroundControldeck);
+
+    this.drawBridges();
+    this.drawVillages();
+    this.drawGuildShields();
+}
+
 Shangrila.prototype.drawVillages = function() {
     /* Loop through villages */
     for(i=1;i<this.villages.length;i++) {
@@ -120,9 +130,10 @@ Shangrila.prototype.drawVillages = function() {
         village.scaleY = height / bounds.height;
         village.village_id = i;
         village.name = 'village_' + i;
-        /*village.addEventListener('click', function(event) {
+        village.addEventListener('click', function(event) {
+            console.log(event);
             shangrila.drawStoneOfTheWiseMen(event.target.village_id);
-        });*/
+        });
         stage.addChild(village);
 
         if(identify) {
@@ -153,7 +164,7 @@ Shangrila.prototype.drawBridges = function() {
 
         /* Draw line */
         var bridge = new createjs.Shape();
-        bridge.graphics.setStrokeStyle(10);
+        bridge.graphics.setStrokeStyle(5);
         bridge.graphics.beginStroke('#000');
 
         //console.log('Drawing a line from ' + from_x + 'x' + from_y + ' to ' + to_x + 'x' + to_y);
@@ -179,6 +190,11 @@ Shangrila.prototype.drawBridges = function() {
 }
 
 Shangrila.prototype.drawStoneOfTheWiseMen = function(village_id) {
+    if(stage.getChildByName('stone_' + village_id)) {
+        console.log('Stone is already placed on village ' + village_id);
+        return;
+    }
+
     var width = shangrila.gameboardWidth * this.villageWidth;
     var height = stage.canvas.clientHeight * this.villageHeight;
 
@@ -189,6 +205,7 @@ Shangrila.prototype.drawStoneOfTheWiseMen = function(village_id) {
     stone.graphics.beginFill('lightblue').drawCircle(0,0,shangrila.gameboardWidth/90);
     stone.x = x;
     stone.y = y;
+    stone.name = 'stone_' + village_id;
     stage.addChild(stone);
 }
 
@@ -214,7 +231,7 @@ Shangrila.prototype.recalculateStoneOfTheWiseMenPlacings = function() {
         }
     }
     for(i=1;i<this.villages.length;i++) {
-        if(connected.indexOf(i) == -1) {
+        if(connected.indexOf(i) == -1 && stage.getChildByName('stone_' + i) == null) {
             console.log('Village ' + i + ' is not connected anymore; place stone of the wise men!');
             shangrila.drawStoneOfTheWiseMen(i);
         }
@@ -247,7 +264,14 @@ Shangrila.prototype.drawGuildShields = function() {
             guildHeight
         );
         var guildShape = new createjs.Shape(guild);
+        guildShape.addEventListener('mouseover', function(event) {
+            event.target.alpha = .50;
+        });
+        guildShape.addEventListener('mouseout', function(event) {
+            event.target.alpha = 1;
+        });
         stage.addChild(guildShape);
+
         var guildAmount = new createjs.Graphics().beginFill('grey').drawRect(
             x,
             y+guildHeight,
@@ -257,17 +281,79 @@ Shangrila.prototype.drawGuildShields = function() {
         var guildAmountShape = new createjs.Shape(guildAmount);
         stage.addChild(guildAmountShape);
 
-        var initial = new createjs.Text(guilds[i-1].substr(0,1),'20px Arial','#fff');
+        var guildName = guilds[i-1];
+
+        var initial = new createjs.Text(guildName.substr(0,1),(guildWidth / 2) + 'px Arial','#fff');
         initial.x = x+guildWidth*0.30;
         initial.y = y+guildHeight*0.70;
         initial.textBaseline = 'alphabetic';
-        stage.addChild(initial);
+        initial.name = 'guild_initial_p1_'  + guildName.substr(0,1);
 
-        var amount = new createjs.Text('6','15px Arial','#fff');
+        var amount = new createjs.Text('6',(guildWidth / 3) + 'px Arial','#fff');
         amount.x = x+guildWidth*0.4;
         amount.y = y+guildHeight*1.43;
         amount.y = y+guildHeight*1.43;
         amount.textBaseline = 'alphabetic';
-        stage.addChild(amount);
+        amount.name = 'guild_amount_p1_' + guildName.substr(0,1);
+
+        var guildShield = new createjs.Container();
+        guildShield.addChild(initial);
+        guildShield.addChild(amount);
+        stage.addChild(guildShield);
+
+        /* Small guilds */
+        guildWidthSmall = guildWidth * 0.5;
+        guildHeightSmall = guildHeight * 0.5;
+        paddingSmall = padding * 0.1;
+        for(j=1;j<this.villages.length;j++) {
+            villageObject = stage.getChildByName('village_' + j);
+            y = villageObject.y;
+            x = villageObject.x;
+            y *= 1.15;
+            x *= 0.95;
+            var guildSmall = new createjs.Graphics().beginFill('black').drawRect(
+                x + (i * (guildWidthSmall + 10)),
+                y,
+                guildWidthSmall,
+                guildHeightSmall
+            );
+            var guildShapeSmall = new createjs.Shape(guildSmall);
+            stage.addChild(guildShapeSmall);
+        }
     }
+}
+
+function onResize() {
+    // browser viewport size
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+
+    // stage dimensions
+    var ow = initialWidth;
+    var oh = initialHeight;
+
+    if (keepAspectRatio)
+    {
+        // keep aspect ratio
+        var scale = Math.min(w / ow, h / oh);
+        stage.scaleX = scale;
+        stage.scaleY = scale;
+
+        // adjust canvas size
+        stage.canvas.width = ow * scale;
+        stage.canvas.height = oh * scale;
+    }
+    else
+    {
+        // scale to exact fit
+        stage.scaleX = w / ow;
+        stage.scaleY = h / oh;
+
+        // adjust canvas size
+        stage.canvas.width = ow * stage.scaleX;
+        stage.canvas.height = oh * stage.scaleY;
+    }
+
+    // update the stage
+    stage.update()
 }
