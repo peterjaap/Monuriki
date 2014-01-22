@@ -122,7 +122,6 @@ Shangrila.prototype.drawVillages = function() {
 
         /* Add image to stage */
         var village = new createjs.Bitmap(queue.getResult('village'));
-        //console.log('Adding village to stage on position ' + x + ', ' + y + ' dimensions ' + width + 'x' + height);
         village.x = x;
         village.y = y;
         bounds = village.getBounds();
@@ -130,10 +129,6 @@ Shangrila.prototype.drawVillages = function() {
         village.scaleY = height / bounds.height;
         village.village_id = i;
         village.name = 'village_' + i;
-        village.addEventListener('click', function(event) {
-            console.log(event);
-            shangrila.drawStoneOfTheWiseMen(event.target.village_id);
-        });
         stage.addChild(village);
 
         if(identify) {
@@ -309,16 +304,39 @@ Shangrila.prototype.drawGuildShields = function() {
             villageObject = stage.getChildByName('village_' + j);
             y = villageObject.y;
             x = villageObject.x;
-            y *= 1.15;
-            x *= 0.95;
-            var guildSmall = new createjs.Graphics().beginFill('black').drawRect(
-                x + (i * (guildWidthSmall + 10)),
+
+            /* Position small shields in grid of 2, 3, 2 over the villages */
+            y += 10;
+            x += 5;
+            if(i <= 2) {
+
+            } else if(i > 2 && i <= 5) {
+                y += 25;
+                x -= 72;
+            } else if(i > 5) {
+                y += 50;
+                x -= 140;
+            }
+
+            x += (i * (guildWidthSmall + 10));
+
+            console.log('guild x; ' + x);
+            console.log('guild y; ' + y);
+
+            var guildSmall = new createjs.Graphics().beginStroke('black').setStrokeStyle(1).beginFill('lightgrey').drawRect(
+                x,
                 y,
                 guildWidthSmall,
                 guildHeightSmall
             );
             var guildShapeSmall = new createjs.Shape(guildSmall);
             stage.addChild(guildShapeSmall);
+
+            var initial = new createjs.Text(guildName.substr(0,1),(guildWidth / 3) + 'px Arial','black');
+            initial.x = x + 5;
+            initial.y = y + 3;
+            initial.name = 'guild_small_initial_p1_'  + guildName.substr(0,1);
+            stage.addChild(initial);
         }
     }
 }
