@@ -169,7 +169,7 @@ for(i=0;i<gameData.villages.length;i++) {
     }
 }
 
-console.log(require('util').inspect(stateMachine, true, 10));
+//console.log(require('util').inspect(stateMachine, true, 10));
 
 // Listen for events
 io.sockets.on('connection', function (socket) {
@@ -189,10 +189,10 @@ io.sockets.on('connection', function (socket) {
 
     function placeMaster(data) {
         // Update state machine
-        stateMachine['villages']['village_' + data.village]['player_' + data.player][data.guild.substr(0,1)] += 1;
+        stateMachine['villages']['village_' + data.village_id]['player_' + data.player][data.guildName.substr(0,1)] += 1;
         // Calculate end of turn
         var total = 0;
-        for(i=0;i<13;i++) {
+        for(i=0;i<gameData.villages.length;i++) {
             guildsPlayer = stateMachine['villages']['village_' + i]['player_' + data.player];
             for(guild in guildsPlayer) {
                 total += guildsPlayer[guild];
@@ -200,9 +200,6 @@ io.sockets.on('connection', function (socket) {
         }
         if(data.player == stateMachine.human_player) {
             socket.emit('showMessage', {message: 'You have placed ' + total + ' of the 7 masters.'});
-        }
-        if(total == 7) {
-            // this signals the last round of the setup part of the game
         }
         next();
     }
@@ -217,72 +214,82 @@ io.sockets.on('connection', function (socket) {
             console.log('Current player is ' + stateMachine['current_player'] + ' and we are in round ' + stateMachine['current_round']);
         }
         var humanTurn = (stateMachine['current_player'] == stateMachine['human_player']);
-        socket.emit('passTurn', {current_player: stateMachine['current_player'], humanTurn: humanTurn});
+        socket.emit('passTurn', {current_player: stateMachine['current_player'], humanTurn: humanTurn, current_round:stateMachine['current_round']});
+
+        if(stateMachine['current_round'] == gameData.guilds.length) {
+            // @TODO set stateMachine data needed for normal play - is there any needed?
+        }
 
         // If the current player is not the human player, do some AI stuff
         if(!humanTurn) {
             setTimeout(function() {
                 doAITurn();
-            }, 4000); // wait a few seconds for the AI to make its move to simulate a human player
+            }, 1000); // wait a few seconds for the AI to make its move to simulate a human player
         }
     }
 
     function doAITurn() {
-        var canPlaceTile = false;
-        do {
-            if(gameData.aiDifficulty == 'easy') {
-                // Completely random
-                village_id = Math.floor(Math.random(0,1)*gameData.villages.length);
-                guild_id = Math.floor(Math.random(0,1)*gameData.guilds.length);
-            } else if(shangrila.aiDifficulty == 'medium') {
-                //@TODO implement
-                // give a greater probability for the AI to choose a village with > 0 masters randomly
-            } else if(shangrila.aiDifficulty == 'hard') {
-                //@TODO implement
-                // first try to place a master in a village with 2 masters, then with 1
-                // maybe also try to pick a village that is not connected to a village where the AI already has masters
-            }
+        if(gameData.aiDifficulty == 'easy') {
+            // Completely random
+            village_id = Math.floor(Math.random(0,1)*gameData.villages.length);
+            guild_id = Math.floor(Math.random(0,1)*gameData.guilds.length);
+        } else if(shangrila.aiDifficulty == 'medium') {
+            //@TODO implement
+            // give a greater probability for the AI to choose a village with > 0 masters randomly
+        } else if(shangrila.aiDifficulty == 'hard') {
+            //@TODO implement
+            // first try to place a master in a village with 2 masters, then with 1
+            // maybe also try to pick a village that is not connected to a village where the AI already has masters
+        }
 
-            guildName = gameData.guilds[guild_id];
+        var action = 'placeTile';
 
-            // Check availability
-            if(stateMachine['villages']['village_' + village_id]['player_' + stateMachine.current_player][guildName.substr(0,1)] === 0) {
-                //console.log('Tile ' + village_id + ' - ' + guildName.substr(0,1) + ' is available');
-                tileAvailable = true;
-            } else {
-                //console.log('Tile ' + village_id + ' - ' + guildName.substr(0,1) + ' is not available');
-            }
+        if(action == 'placeTile') {
+            var canPlaceTile = false;
+            do {
+                guildName = gameData.guilds[guild_id];
 
-            if(tileAvailable) {
-                sum = 0;
-                sumForPlayer = 0;
-                // check whether there are less than 3 masters in this village
-                for(i=0;i<gameData.colorNames.length;i++) {
-                    for(j=0;j<gameData.guilds.length;j++) {
-                        //console.log('Checking for village ' + village_id + ' and player ' + gameData.colorNames[i] + ' and guild ' + gameData.guilds[j]);
-                        amount = stateMachine['villages']['village_' + village_id]['player_' + gameData.colorNames[i]][gameData.guilds[j].substr(0,1)];;
-                        sum += amount;
-                        // check whether the current player has less than 2 masters in this village
-                        if(gameData.colorNames[i] == stateMachine.current_player) {
-                            sumForPlayer += amount;
+                // Check availability
+                if(stateMachine['villages']['village_' + village_id]['player_' + stateMachine.current_player][guildName.substr(0,1)] === 0) {
+                    //console.log('Tile ' + village_id + ' - ' + guildName.substr(0,1) + ' is available');
+                    tileAvailable = true;
+                } else {
+                    //console.log('Tile ' + village_id + ' - ' + guildName.substr(0,1) + ' is not available');
+                }
+
+                if(tileAvailable) {
+                    sum = 0;
+                    sumForPlayer = 0;
+                    // check whether there are less than 3 masters in this village
+                    for(i=0;i<gameData.colorNames.length;i++) {
+                        for(j=0;j<gameData.guilds.length;j++) {
+                            //console.log('Checking for village ' + village_id + ' and player ' + gameData.colorNames[i] + ' and guild ' + gameData.guilds[j]);
+                            amount = stateMachine['villages']['village_' + village_id]['player_' + gameData.colorNames[i]][gameData.guilds[j].substr(0,1)];;
+                            sum += amount;
+                            // check whether the current player has less than 2 masters in this village
+                            if(gameData.colorNames[i] == stateMachine.current_player) {
+                                sumForPlayer += amount;
+                            }
                         }
+                    }
+
+                    if(sum < 3 && sumForPlayer < 2) {
+                        canPlaceTile = true;
                     }
                 }
 
-                if(sum < 3 && sumForPlayer < 2) {
-                    canPlaceTile = true;
-                }
-            }
+            } while(!canPlaceTile);
 
-        } while(!canPlaceTile);
-
-        console.log(stateMachine.current_player + ' places a ' + guildName + ' master on village ' + village_id);
-        socket.emit('placeMaster', {
-            player: stateMachine.current_player,
-            guild_id: guild_id,
-            guildName: guildName,
-            village_id: village_id
-        });
+            console.log(stateMachine.current_player + ' places a ' + guildName + ' master on village ' + village_id);
+            var data = {
+                player: stateMachine.current_player,
+                guild_id: guild_id,
+                guildName: guildName,
+                village_id: village_id
+            };
+            placeMaster(data);
+            socket.emit('placeMaster', data);
+        }
     }
 
 });

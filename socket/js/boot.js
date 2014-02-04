@@ -39,7 +39,30 @@ document.addEventListener('DOMContentLoaded', function(){
                 stage.removeChild(stage.getChildByName('loadingScreen'));
             }
             stage.enableMouseOver(20);
-            shangrila.showMessage('It is your turn!');
+
+                 if(data.current_round == shangrila.guilds.length) { // we need as much rounds as there are guilds in setup phase
+                 shangrila.setupRound = false;
+                 shangrila.showMessage('You can now perform 1 of 3 actions; place a master, recruit students or travel.', 6000);
+
+                 /*
+                 @TODO set new onclick actions on the small guilds
+
+                 When clicked on the guild, a popup should appear with three options;
+                 - place a master on this guild
+                    - if it is available
+                 - recruit a student for this guild
+                     - if there already is a master
+                     - if less than 2 students have been placed in this round)
+                 - begin the journey of the students
+                     - choose which city to travel to
+                     - AND BATTLE!!
+                 */
+
+            } else if(data.current_round < 7) {
+                shangrila.showMessage('It is your turn!');
+            } else if(data.current_round > 7) {
+                shangrila.showMessage('It is your turn!');
+            }
         } else {
             if(!stage.getChildByName('loadingScreen')) {
                 var waitingScreen = new createjs.Graphics().beginFill('black').rect(0, 0, stage.canvas.width, stage.canvas.height);
@@ -49,13 +72,6 @@ document.addEventListener('DOMContentLoaded', function(){
                 stage.addChild(waitingScreenShape);
             }
             stage.enableMouseOver(0);
-            /*var loaderImage = new createjs.Bitmap(queue.getResult('loader'));
-             loaderImage.x = stage.canvas.width / 2;
-             loaderImage.y = stage.canvas.height / 2;
-             var container = new createjs.Container();
-             container.addChild(waitingScreenShape,loaderImage);
-             container.name = 'loadingScreen';
-             stage.addChild(container);*/
 
             shangrila.showMessage('It is ' + data.current_player + '\'s turn!');
         }

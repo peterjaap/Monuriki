@@ -98,6 +98,7 @@ Shangrila.prototype.drawVillages = function() {
         village.village_id = i;
         village.name = 'village_' + i;
         village.masterTiles = {'blue': 0, 'red': 0, 'yellow': 0, 'violet': 0};
+        village.studentTiles = {'blue': 0, 'red': 0, 'yellow': 0, 'violet': 0};
         stage.addChild(village);
 
         if(identify) {
@@ -377,13 +378,13 @@ Shangrila.prototype.placeMaster = function(data, event) {
                 shangrila.showMessage('You have placed a ' + data.guildName + ' master in village ' + data.village_id);
                 amount.amount = amount.amount - 1;
                 amount.text = amount.amount;
-                socket.emit('placeMaster', {'village':data.village_id, amount:amount.amount, guild:data.guildName, player: data.player});
+                socket.emit('placeMaster', {'village_id':data.village_id, guildName:data.guildName, player: data.player});
             }
         } else if(shangrila.setupRound && amount.amount < 6) {
             shangrila.showMessage('Sorry, you have already placed a ' + data.guildName + ' master in a village. This is not allowed in the first round.');
         } else if(!shangrila.setupRound) {
             // normal game
-            console.log('Normal game!');
+            alert('Normal game! What to do?');
         }
     } else {
         if(shangrila.setupRound) {
@@ -400,10 +401,9 @@ Shangrila.prototype.placeMaster = function(data, event) {
             shangrila.showMessage(data.player + ' has placed a ' + data.guildName + ' master in village ' + data.village_id);
             amount.amount = amount.amount - 1;
             amount.text = amount.amount;
-            socket.emit('placeMaster', {'village':data.village_id, amount:amount.amount, guild:data.guildName, player: data.player});
         } else if(!shangrila.setupRound) {
             // normal game
-            console.log('Normal game!');
+            alert('Normal game! What to do?');
         }
     }
 }
