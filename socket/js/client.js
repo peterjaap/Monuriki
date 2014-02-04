@@ -81,7 +81,7 @@ Shangrila.prototype.initNewGame = function(human_player) {
 /* Draw the villages on the canvas */
 Shangrila.prototype.drawVillages = function() {
     /* Loop through villages */
-    for(i=1;i<this.villages.length;i++) {
+    for(i=0;i<this.villages.length;i++) {
         /* Get and calculate village positions and edges */
         var x = shangrila.gameboardWidth * (this.villages[i]['left']/100);
         var y = stage.canvas.clientHeight * (this.villages[i]['top']/100);
@@ -97,7 +97,7 @@ Shangrila.prototype.drawVillages = function() {
         village.scaleY = height / bounds.height;
         village.village_id = i;
         village.name = 'village_' + i;
-        village.masterTiles = 0;
+        village.masterTiles = {'blue': 0, 'red': 0, 'yellow': 0, 'violet': 0};
         stage.addChild(village);
 
         if(identify) {
@@ -113,7 +113,7 @@ Shangrila.prototype.drawVillages = function() {
 /* Draw the bridges on the canvas */
 Shangrila.prototype.drawBridges = function() {
     /* Loop through bridges */
-    for(i=1;i<this.bridges.length;i++) {
+    for(i=0;i<this.bridges.length;i++) {
         var width = shangrila.gameboardWidth * this.villageWidth;
         var height = stage.canvas.clientHeight * this.villageHeight;
 
@@ -162,7 +162,7 @@ Shangrila.prototype.removeBridge = function(data) {
 /* See whether a stone of the wise men needs to be placed in a village */
 Shangrila.prototype.recalculateStoneOfTheWiseMenPlacings = function() {
     var connected = [];
-    for(i=1;i<this.bridges.length;i++) {
+    for(i=0;i<this.bridges.length;i++) {
         var bridgeObject = stage.getChildByName('bridge_' + i);
         if(bridgeObject) {
             if(this.bridges[bridgeObject.bridge_id]) {
@@ -177,7 +177,7 @@ Shangrila.prototype.recalculateStoneOfTheWiseMenPlacings = function() {
             }
         }
     }
-    for(i=1;i<this.villages.length;i++) {
+    for(i=0;i<this.villages.length;i++) {
         if(connected.indexOf(i) == -1 && stage.getChildByName('stone_' + i) == null) {
             shangrila.drawStoneOfTheWiseMen(i);
         }
@@ -213,18 +213,18 @@ Shangrila.prototype.drawStoneOfTheWiseMen = function(village_id) {
 
 /* Draw guild shields on the control deck and on the villages */
 Shangrila.prototype.drawGuildShields = function() {
-    var noGuildsOnSingleRow = 4;
-    var guildWidth = (shangrila.controldeckWidth * 0.6) / noGuildsOnSingleRow;
+    var noGuildsOnSingleRow = 3;
+    var guildWidth = (shangrila.controldeckWidth * 0.6) / (noGuildsOnSingleRow+1);
     var padding = (shangrila.controldeckWidth * 0.05);
     var guildHeight = guildWidth;
 
-    for(i=1;i<=this.guilds.length;i++) {
+    for(i=0;i<this.guilds.length;i++) {
         if(i > noGuildsOnSingleRow) {
             var y = (shangrila.gameboardHeight * 0.05) + (guildHeight * 1.8);
-            j = i-noGuildsOnSingleRow;
+            j = i-noGuildsOnSingleRow+1;
         } else {
             var y = (shangrila.gameboardHeight * 0.05);
-            j = i;
+            j = i+1;
         }
         var x = shangrila.gameboardWidth + ((guildWidth + padding) * j) - guildWidth / 2;
         var guild = new createjs.Graphics().beginFill('black').rect(
@@ -251,7 +251,7 @@ Shangrila.prototype.drawGuildShields = function() {
         var guildAmountShape = new createjs.Shape(guildAmount);
         stage.addChild(guildAmountShape);
 
-        guildName = this.guilds[i-1];
+        guildName = this.guilds[i];
 
         /* Draw guilds on the controldeck */
         var initial = new createjs.Text(guildName.substr(0,1),(guildWidth / 2) + 'px Arial','#fff');
@@ -283,7 +283,7 @@ Shangrila.prototype.drawGuildShields = function() {
         guildHeightSmall = guildHeight * 0.5;
         paddingSmall = padding * 0.1;
 
-        for(j=1;j<this.villages.length;j++) {
+        for(j=0;j<this.villages.length;j++) {
             villageObject = stage.getChildByName('village_' + j);
 
             y = villageObject.y;
@@ -292,17 +292,17 @@ Shangrila.prototype.drawGuildShields = function() {
             /* Position small shields in grid of 2, 3, 2 over the villages */
             y += 10;
             x += 5;
-            if(i <= 2) {
+            if(i <= 1) {
 
-            } else if(i > 2 && i <= 5) {
+            } else if(i > 1 && i <= 4) {
                 y += 25;
                 x -= 72;
-            } else if(i > 5) {
+            } else if(i > 4) {
                 y += 50;
                 x -= 140;
             }
 
-            x += (i * (guildWidthSmall + 10));
+            x += ((i+1) * (guildWidthSmall + 10));
 
             var guildSmall = new createjs.Graphics().beginStroke('black').setStrokeStyle(1).beginFill('lightgrey').rect(
                 x,
@@ -353,8 +353,14 @@ Shangrila.prototype.placeMaster = function(data, event) {
 
     if(data.player == shangrila.human_player) {
         if(shangrila.setupRound && amount.amount == 6) {
-            if(village.masterTiles == 3) {
+            totalMasterTiles = 0;
+            for(var key in village.masterTiles) {
+                totalMasterTiles += village.masterTiles[key];
+            }
+            if(totalMasterTiles >= 3) {
                 shangrila.showMessage('Sorry, there are already 3 masters in this village.');
+            } else if(village.masterTiles[data.player] >= 2) {
+                shangrila.showMessage('Sorry, you already have 2 masters in this village.');
             } else {
                 if(typeof event != "undefined") {
                     event.target.removeAllEventListeners();
@@ -367,7 +373,7 @@ Shangrila.prototype.placeMaster = function(data, event) {
                     guildShapeSmall.getBounds().height
                 ).endFill();
 
-                village.masterTiles += 1;
+                village.masterTiles[data.player] += 1;
                 shangrila.showMessage('You have placed a ' + data.guildName + ' master in village ' + data.village_id);
                 amount.amount = amount.amount - 1;
                 amount.text = amount.amount;
@@ -388,7 +394,9 @@ Shangrila.prototype.placeMaster = function(data, event) {
                 guildShapeSmall.getBounds().height
             ).endFill();
 
-            village.masterTiles += 1;
+            guildShapeSmall.removeAllEventListeners();
+
+            village.masterTiles[data.player] += 1;
             shangrila.showMessage(data.player + ' has placed a ' + data.guildName + ' master in village ' + data.village_id);
             amount.amount = amount.amount - 1;
             amount.text = amount.amount;

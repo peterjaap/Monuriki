@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', function(){
             if(stage.getChildByName('loadingScreen')) {
                 stage.removeChild(stage.getChildByName('loadingScreen'));
             }
+            stage.enableMouseOver(20);
             shangrila.showMessage('It is your turn!');
         } else {
             if(!stage.getChildByName('loadingScreen')) {
@@ -47,6 +48,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 waitingScreenShape.name = 'loadingScreen';
                 stage.addChild(waitingScreenShape);
             }
+            stage.enableMouseOver(0);
             /*var loaderImage = new createjs.Bitmap(queue.getResult('loader'));
              loaderImage.x = stage.canvas.width / 2;
              loaderImage.y = stage.canvas.height / 2;
