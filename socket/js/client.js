@@ -1,106 +1,12 @@
 function Shangrila() {
-    /* Define positions of villages */
-    this.villages = [];
-    this.villages[1] = {top:5,left:8 };
-    this.villages[2] = {top:36, left:14 };
-    this.villages[3] = {top:64, left:6 };
-    this.villages[4] = {top:5, left:43 };
-    this.villages[5] = {top:23, left:33 };
-    this.villages[6] = {top:49, left:36 };
-    this.villages[7] = {top:79, left:28 };
-    this.villages[8] = {top:21, left:59 };
-    this.villages[9] = {top:38, left:56 };
-    this.villages[10] = {top:78, left:74 };
-    this.villages[11] = {top:9, left:73 };
-    this.villages[12] = {top:40, left:77 };
-    this.villages[13] = {top:57, left:70 };
-    this.villageWidth = 0.12;
-    this.villageHeight = 0.12;
-
-    /* Define the bridges that connect the villages
-     * From and to refers to index key in the this.villages object above
-     */
-    this.bridges = [];
-    this.bridges[1] = {from:1, to:3};
-    this.bridges[2] = {from:3, to:7};
-    this.bridges[3] = {from:1, to:2};
-    this.bridges[4] = {from:2, to:3};
-    this.bridges[5] = {from:1, to:5};
-    this.bridges[6] = {from:5, to:2};
-    this.bridges[7] = {from:2, to:7};
-    this.bridges[8] = {from:1, to:4};
-    this.bridges[9] = {from:5, to:8};
-    this.bridges[10] = {from:4, to:11};
-    this.bridges[11] = {from:8, to:11};
-    this.bridges[12] = {from:11, to:12};
-    this.bridges[13] = {from:4, to:8};
-    this.bridges[14] = {from:5, to:6};
-    this.bridges[15] = {from:6, to:7};
-    this.bridges[16] = {from:6, to:10};
-    this.bridges[17] = {from:6, to:9};
-    this.bridges[18] = {from:7, to:10};
-    this.bridges[19] = {from:10, to:13};
-    this.bridges[20] = {from:9, to:13};
-    this.bridges[21] = {from:12, to:13};
-    this.bridges[22] = {from:8, to:12};
-    this.bridges[23] = {from:8, to:9};
-
-    this.guilds = ['Healer','Dragonbreather','Firekeeper','Priest','Rainmaker','Astrologer','Yeti-whisperer'];
-
-    /* Define the colors that are used for the various players */
-    this.colors = ['blue','red','yellow','violet'];
-    this.colors['blue'] = [];
-    this.colors['blue']['gamecanvasBackground'] = 'lightblue';
-    this.colors['blue']['controldeckBackground'] = '#7ec1d7';
-
-    this.colors['red'] = [];
-    this.colors['red']['gamecanvasBackground'] = '#f46d6d';
-    this.colors['red']['controldeckBackground'] = '#b80000';
-
-    this.colors['yellow'] = [];
-    this.colors['yellow']['gamecanvasBackground'] = '#fffcaa';
-    this.colors['yellow']['controldeckBackground'] = '#d8d500';
-
-    this.colors['violet'] = [];
-    this.colors['violet']['gamecanvasBackground'] = '#e6aaff';
-    this.colors['violet']['controldeckBackground'] = '#58007d';
-
-    this.numberOfMessages = 0;
-}
-
-Shangrila.prototype.showMessage = function(messageText, duration) {
-    if(typeof duration == 'undefined') duration = 2000;
-
-    this.numberOfMessages += 1;
-
-    height = stage.canvas.height * 0.04;
-    var messageGraphic = new createjs.Graphics().beginFill('black').rect(
-        stage.canvas.width * 0.25,
-        0,
-        stage.canvas.width * 0.5,
-        height
-    );
-    var messageShape = new createjs.Shape(messageGraphic);
-    messageShape.y = height * -1;
-    stage.addChild(messageShape);
-
-    var toPosition = ((this.numberOfMessages-1) * height) + 0;
-    var toPositionMessage = ((this.numberOfMessages-1) * height) + 5;
-
-    createjs.Tween.get(messageShape).to({y:toPosition}, 500).wait(duration).to({y:height*-1}, 1000).call(function (event) {stage.removeChild(event.target);});
-
-    var message = new createjs.Text(messageText, '12px Arial','white');
-    bounds = message.getBounds();
-    message.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
-    message.y = height * -1;
-    createjs.Tween.get(message).to({y:toPositionMessage}, 500).wait(duration).to({y:height*-1}, 1000).call(function (event) {stage.removeChild(event.target); shangrila.numberOfMessages -= 1; });
-
-    stage.addChild(message);
-
+    /* Remove previous children from the stage when creating new object */
+    stage.removeAllChildren();
+    stage.update();
 }
 
 /* Starts game engine & shows 'Choose color' screen */
-Shangrila.prototype.startGame = function() {
+Shangrila.prototype.splashScreen = function() {
+
     var title = new createjs.Text('The Bridges of Shangri-la',(stage.canvas.width * 0.06) + 'px Arial','black');
     bounds = title.getBounds();
     title.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
@@ -113,15 +19,19 @@ Shangrila.prototype.startGame = function() {
     subtitle.y = stage.canvas.height * 0.40;
     stage.addChild(subtitle);
 
-    for(i=0;i<this.colors.length;i++) {
-        var startButton = new createjs.Graphics().beginFill(this.colors[i]).rect(
+    /* Walk through the colors to display their button */
+    for(i=0;i<this.colorNames.length;i++) {
+        // Create button
+        var startButton = new createjs.Graphics().beginFill(this.colorNames[i]).rect(
             (stage.canvas.width * 0.08) + ((stage.canvas.width * 0.5) - (((stage.canvas.width * 0.06)+(stage.canvas.width * 0.02)) * i)),
             title.y * 2,
             (stage.canvas.width * 0.06),
             (stage.canvas.width * 0.06)
         );
+        // Create shape for button
         var startButtonShape = new createjs.Shape(startButton);
-        startButtonShape.color = this.colors[i];
+        // Set color and add mouse over effects
+        startButtonShape.color = this.colorNames[i];
         startButtonShape.addEventListener('mouseover', function(event) {
             event.target.alpha = .50;
         });
@@ -129,29 +39,32 @@ Shangrila.prototype.startGame = function() {
             event.target.alpha = 1;
 
         });
+        // Set action to perform when clicked
         startButtonShape.addEventListener('click', function(event) {
             shangrila.initNewGame(event.target.color);
         });
+        // Add button to the stage
         stage.addChild(startButtonShape);
     }
 }
 
 /* Initializes new game. Used when player is chosen or when new game needs to be started from beginning */
-Shangrila.prototype.initNewGame = function(color) {
+Shangrila.prototype.initNewGame = function(human_player) {
     this.setupRound = true;
-    this.color = color;
+    this.human_player = human_player;
 
     this.gameboardWidth = stage.canvas.width*0.8;
     this.gameboardHeight = stage.canvas.height;
     this.controldeckWidth = stage.canvas.width*0.2;
 
     /* Draw background game board */
-    var graphicsGamecanvas = new createjs.Graphics().beginFill(this.colors[this.color]['gamecanvasBackground']).rect(0, 0, this.gameboardWidth, stage.canvas.height);
+    var graphicsGamecanvas = new createjs.Graphics().beginFill(this.colors[this.human_player]['gamecanvasBackground']).rect(0, 0, this.gameboardWidth, stage.canvas.height);
     var backgroundGamecanvas = new createjs.Shape(graphicsGamecanvas);
+    backgroundGamecanvas.name = 'backgroundGamecanvas';
     stage.addChild(backgroundGamecanvas);
 
     /* Draw background control deck */
-    var graphicsControldeck = new createjs.Graphics().beginFill(this.colors[this.color]['controldeckBackground']).rect(this.gameboardWidth, 0, this.controldeckWidth, stage.canvas.height);
+    var graphicsControldeck = new createjs.Graphics().beginFill(this.colors[this.human_player]['controldeckBackground']).rect(this.gameboardWidth, 0, this.controldeckWidth, stage.canvas.height);
     var backgroundControldeck = new createjs.Shape(graphicsControldeck);
     stage.addChild(backgroundControldeck);
 
@@ -159,8 +72,10 @@ Shangrila.prototype.initNewGame = function(color) {
     this.drawVillages();
     this.drawGuildShields();
 
-    shangrila.showMessage('Welcome player ' + color + '!');
+    shangrila.showMessage('Welcome player ' + human_player + '!');
     shangrila.showMessage('Please place one of your guilds in a village (with a maximum of 3 per village).', 5000);
+
+    socket.emit('chooseColor', { human_player: human_player});
 }
 
 /* Draw the villages on the canvas */
@@ -243,11 +158,6 @@ Shangrila.prototype.removeBridge = function(data) {
     shangrila.showMessage('Bridge ' + data.bridge_id + ' has now been burnt!');
     shangrila.recalculateStoneOfTheWiseMenPlacings();
 }
-
-/* Function needed for diffing arrays */
-Array.prototype.diff = function(a) {
-    return this.filter(function(i) {return !(a.indexOf(i) > -1);});
-};
 
 /* See whether a stone of the wise men needs to be placed in a village */
 Shangrila.prototype.recalculateStoneOfTheWiseMenPlacings = function() {
@@ -348,19 +258,25 @@ Shangrila.prototype.drawGuildShields = function() {
         initial.x = x+guildWidth*0.30;
         initial.y = y+guildHeight*0.70;
         initial.textBaseline = 'alphabetic';
-        initial.name = 'guild_initial_p1_'  + guildName.substr(0,1);
+        initial.name = 'guild_initial_blue_'  + guildName.substr(0,1);
 
-        var amount = new createjs.Text('AMOUNT',(guildWidth / 3) + 'px Arial','#fff');
-        amount.x = x+guildWidth*0.4;
-        amount.y = y+guildHeight*1.43;
-        amount.y = y+guildHeight*1.43;
-        amount.amount = 6;
-        amount.text = amount.amount;
-        amount.textBaseline = 'alphabetic';
-        amount.name = 'guild_amount_p1_' + guildName.substr(0,1);
-
+        for(n=0;n<shangrila.colorNames.length;n++) {
+            var amount = new createjs.Text('AMOUNT',(guildWidth / 3) + 'px Arial','#fff');
+            if(shangrila.colorNames[n] == shangrila.human_player) {
+                amount.x = x+guildWidth*0.4;
+                amount.y = y+guildHeight*1.43;
+            } else {
+                // Outside of screen
+                amount.x = 100000000;
+                amount.y = 100000000;
+            }
+            amount.amount = 6;
+            amount.text = amount.amount;
+            amount.textBaseline = 'alphabetic';
+            amount.name = 'guild_amount_' + shangrila.colorNames[n] + '_' + guildName.substr(0,1);
+            stage.addChild(amount);
+        }
         stage.addChild(initial);
-        stage.addChild(amount);
 
         /* Small guilds for on the villages */
         guildWidthSmall = guildWidth * 0.5;
@@ -401,7 +317,7 @@ Shangrila.prototype.drawGuildShields = function() {
             guildShapeSmall.guild_id = i;
             guildShapeSmall.village_id = j;
             guildShapeSmall.addEventListener('mouseover', function(event) {
-               event.target.graphics.beginFill(shangrila.color).rect(
+               event.target.graphics.beginFill(shangrila.human_player).rect(
                    event.target.getBounds().x,
                    event.target.getBounds().y,
                    event.target.getBounds().width,
@@ -417,37 +333,103 @@ Shangrila.prototype.drawGuildShields = function() {
                 ).endFill();
             });
             guildShapeSmall.addEventListener('click', function(event) {
-                shangrila.placeMaster(event);
+                shangrila.placeMaster({village_id: event.target.village_id, guild_id: event.target.guild_id, guildName: event.target.guildName, player: shangrila.human_player }, event);
             });
             stage.addChild(guildShapeSmall);
 
             var initial = new createjs.Text(guildName.substr(0,1),(guildWidth / 3) + 'px Arial','black');
             initial.x = x + 5;
             initial.y = y + 3;
-            initial.name = 'guild_small_initial_p1_'  + guildName.substr(0,1);
+            initial.name = 'guild_small_initial_blue_'  + guildName.substr(0,1);
             stage.addChild(initial);
         }
     }
 }
 
-Shangrila.prototype.placeMaster = function(event) {
-    var village = stage.getChildByName('village_' + event.target.village_id);
-    var amount = stage.getChildByName('guild_amount_p1_' + event.target.guildName.substr(0,1));
-    if(shangrila.setupRound && amount.amount == 6) {
-        if(village.masterTiles == 3) {
-            shangrila.showMessage('Sorry, there are already 3 masters in this village.');
-        } else {
-            event.target.removeAllEventListeners();
+Shangrila.prototype.placeMaster = function(data, event) {
+    var village = stage.getChildByName('village_' + data.village_id);
+    var guildShapeSmall = stage.getChildByName('guild_shape_small_' + data.guild_id + '_' + data.village_id);
+    var amount = stage.getChildByName('guild_amount_' + data.player + '_' + data.guildName.substr(0,1));
+
+    if(data.player == shangrila.human_player) {
+        if(shangrila.setupRound && amount.amount == 6) {
+            if(village.masterTiles == 3) {
+                shangrila.showMessage('Sorry, there are already 3 masters in this village.');
+            } else {
+                if(typeof event != "undefined") {
+                    event.target.removeAllEventListeners();
+                }
+
+                guildShapeSmall.graphics.beginFill(data.player).rect(
+                    guildShapeSmall.getBounds().x,
+                    guildShapeSmall.getBounds().y,
+                    guildShapeSmall.getBounds().width,
+                    guildShapeSmall.getBounds().height
+                ).endFill();
+
+                village.masterTiles += 1;
+                shangrila.showMessage('You have placed a ' + data.guildName + ' master in village ' + data.village_id);
+                amount.amount = amount.amount - 1;
+                amount.text = amount.amount;
+                socket.emit('placeMaster', {'village':data.village_id, amount:amount.amount, guild:data.guildName, player: data.player});
+            }
+        } else if(shangrila.setupRound && amount.amount < 6) {
+            shangrila.showMessage('Sorry, you have already placed a ' + data.guildName + ' master in a village. This is not allowed in the first round.');
+        } else if(!shangrila.setupRound) {
+            // normal game
+            console.log('Normal game!');
+        }
+    } else {
+        if(shangrila.setupRound) {
+            guildShapeSmall.graphics.beginFill(data.player).rect(
+                guildShapeSmall.getBounds().x,
+                guildShapeSmall.getBounds().y,
+                guildShapeSmall.getBounds().width,
+                guildShapeSmall.getBounds().height
+            ).endFill();
+
             village.masterTiles += 1;
-            shangrila.showMessage('You have placed a ' + event.target.guildName + ' master in village ' + j);
+            shangrila.showMessage(data.player + ' has placed a ' + data.guildName + ' master in village ' + data.village_id);
             amount.amount = amount.amount - 1;
             amount.text = amount.amount;
-            socket.emit('placeMaster', {'village':event.target.village_id, amount:amount.amount, guild:event.target.guildName, player: 1});
+            socket.emit('placeMaster', {'village':data.village_id, amount:amount.amount, guild:data.guildName, player: data.player});
+        } else if(!shangrila.setupRound) {
+            // normal game
+            console.log('Normal game!');
         }
-    } else if(shangrila.setupRound && amount.amount < 6) {
-        shangrila.showMessage('Sorry, you have already placed a ' + event.target.guildName + ' master in a village. This is not allowed in the first round.');
-    } else if(!shangrila.setupRound) {
-        // normal game
-        console.log('wut');
     }
+}
+
+
+Shangrila.prototype.showMessage = function(messageText, duration) {
+    if(typeof duration == 'undefined') duration = 2000;
+
+    this.messageHistory.push({timestamp: +new Date, message: messageText});
+
+    this.numberOfActiveMessages += 1;
+
+    height = stage.canvas.height * 0.04;
+    var messageGraphic = new createjs.Graphics().beginFill('black').rect(
+        stage.canvas.width * 0.25,
+        0,
+        stage.canvas.width * 0.5,
+        height
+    );
+    var messageShape = new createjs.Shape(messageGraphic);
+    messageShape.y = height * -1;
+    stage.addChild(messageShape);
+
+    var toPosition = ((this.numberOfActiveMessages-1) * height) + 0;
+    var toPositionMessage = ((this.numberOfActiveMessages-1) * height) + 5;
+
+    createjs.Tween.get(messageShape).to({y:toPosition}, 500).wait(duration).to({y:height*-1}, 1000).call(function (event) {stage.removeChild(event.target);});
+
+    var message = new createjs.Text(messageText, '12px Arial','white');
+    bounds = message.getBounds();
+    message.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
+    message.y = height * -1;
+    createjs.Tween.get(message).to({y:toPositionMessage}, 500).wait(duration).to({y:height*-1}, 1000).call(function (event) {stage.removeChild(event.target); shangrila.numberOfActiveMessages -= 1; });
+
+    stage.addChild(message);
+
 }
