@@ -6,18 +6,19 @@ function Shangrila() {
 
 /* Starts game engine & shows 'Choose color' screen */
 Shangrila.prototype.splashScreen = function() {
+    var splashContainer = new createjs.Container();
 
     var title = new createjs.Text('The Bridges of Shangri-la',(stage.canvas.width * 0.06) + 'px Arial','black');
     bounds = title.getBounds();
     title.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
     title.y = stage.canvas.height * 0.25;
-    stage.addChild(title);
+    splashContainer.addChild(title);
 
     var subtitle = new createjs.Text('Choose your color',(stage.canvas.width * 0.03) + 'px Arial','black');
     bounds = subtitle.getBounds();
     subtitle.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
     subtitle.y = stage.canvas.height * 0.40;
-    stage.addChild(subtitle);
+    splashContainer.addChild(subtitle);
 
     /* Walk through the colors to display their button */
     for(i=0;i<this.colorNames.length;i++) {
@@ -44,7 +45,9 @@ Shangrila.prototype.splashScreen = function() {
             shangrila.initNewGame(event.target.color);
         });
         // Add button to the stage
-        stage.addChild(startButtonShape);
+        splashContainer.addChild(startButtonShape);
+        splashContainer.name = 'splashContainer';
+        stage.addChild(splashContainer);
     }
 }
 
@@ -52,6 +55,10 @@ Shangrila.prototype.splashScreen = function() {
 Shangrila.prototype.initNewGame = function(human_player) {
     this.setupRound = true;
     this.human_player = human_player;
+
+    if(splashContainer = stage.getChildByName('splashContainer')) {
+        stage.removeChild(splashContainer); // remove splash page from stage
+    }
 
     this.gameboardWidth = stage.canvas.width*0.8;
     this.gameboardHeight = stage.canvas.height;
@@ -72,10 +79,78 @@ Shangrila.prototype.initNewGame = function(human_player) {
     this.drawVillages();
     this.drawGuildShields();
 
+    this.drawMenu();
+
     shangrila.showMessage('Welcome player ' + human_player + '!');
     shangrila.showMessage('Please place one of your guilds in a village (with a maximum of 3 per village).', 5000);
 
     socket.emit('chooseColor', { human_player: human_player});
+}
+
+Shangrila.prototype.drawMenu = function() {
+    var menuScreen = new createjs.Container();
+    menuScreen.name = 'menuScreen';
+
+    var menuBackground = new createjs.Graphics().beginFill('black').rect(0, 0, stage.canvas.width, stage.canvas.height);
+    var menuBackgroundShape = new createjs.Shape(menuBackground);
+    menuBackgroundShape.name = 'menuBackground';
+    menuBackgroundShape.alpha = .7;
+    menuScreen.addChild(menuBackgroundShape);
+
+    width = stage.canvas.width*0.25;
+    height = stage.canvas.width*0.25;
+    x = (stage.canvas.width - width) / 2;
+    y = (stage.canvas.height - height) / 3;
+    var menu = new createjs.Graphics().beginFill('white').rect(x, y, width, height);
+    var menuShape = new createjs.Shape(menu);
+    menuShape.name = 'menu';
+    menuScreen.addChild(menuShape);
+
+    var menuTitle = 'Choose action';
+    var titleText = new createjs.Text(menuTitle, '30px Arial','black');
+    titleText.x = x + ((width - titleText.getBounds().width) / 2);
+    titleText.y = y + titleText.getBounds().height;
+    menuScreen.addChild(titleText);
+
+    var menuOptions = ['Place master','Place students','Move students'];
+    i = 0;
+    for(var menuOption in menuOptions) {
+        if (menuOptions.hasOwnProperty(menuOption)) {
+            optionText = new createjs.Text(menuOptions[menuOption], '25px Arial', 'grey');
+            textWidth = optionText.getBounds().width;
+            textHeight = optionText.getBounds().height;
+            optionText.x = x + ((width - textWidth) / 2);
+            optionText.y = titleText.y + (titleText.getBounds().height * 1.5) + (textHeight * 1.5 * i);
+            optionText.hitArea = new createjs.Shape(new createjs.Graphics().beginFill('#000').drawRect(0,0,textWidth,textHeight));
+
+            optionText.on('mouseover', function (e) {
+                e.target.color = 'black';
+            });
+
+            optionText.on('mouseout', function (e) {
+                e.target.color = 'grey';
+            });
+
+            if(menuOptions[menuOption] == 'Place master') {
+                optionText.on('click', function (e) {
+                    alert('Click on an available tile to place your master.');
+                    stage.removeChild(stage.getChildByName('menuScreen'));
+                });
+            } else if(menuOptions[menuOption] == 'Place students') {
+                optionText.on('click', function (e) {
+                    alert('Click on two of your masters to place two students.');
+                });
+            } else if(menuOptions[menuOption] == 'Move students') {
+                optionText.on('click', function (e) {
+                    alert('Choose the village from where you want to move your students, followed by the village where you want them to go.');
+                });
+            }
+
+            menuScreen.addChild(optionText);
+            i++
+        }
+    }
+    stage.addChild(menuScreen);
 }
 
 /* Draw the villages on the canvas */
