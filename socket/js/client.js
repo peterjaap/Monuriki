@@ -284,6 +284,8 @@ Shangrila.prototype.drawGuildShields = function() {
         guildHeightSmall = guildHeight * 0.5;
         paddingSmall = padding * 0.1;
 
+        //console.log('guildWidth; ' + guildWidth); // 38.28
+
         for(j=0;j<this.villages.length;j++) {
             villageObject = stage.getChildByName('village_' + j);
 
@@ -291,19 +293,19 @@ Shangrila.prototype.drawGuildShields = function() {
             x = villageObject.x;
 
             /* Position small shields in grid of 2, 3, 2 over the villages */
-            y += 10;
-            x += 5;
+            y += guildWidth * .26123302;
+            x += (guildWidth * .26123302) / 2;
             if(i <= 1) {
 
             } else if(i > 1 && i <= 4) {
-                y += 25;
-                x -= 72;
+                y += (guildWidth * .26123302)*2.5;
+                x -= guildWidth * 1.880877743;
             } else if(i > 4) {
-                y += 50;
-                x -= 140;
+                y += guildWidth * 1.306165099;
+                x -= guildWidth * 3.657262278;
             }
 
-            x += ((i+1) * (guildWidthSmall + 10));
+            x += ((i+1) * (guildWidthSmall + (guildWidth * .26123302)));
 
             var guildSmall = new createjs.Graphics().beginStroke('black').setStrokeStyle(1).beginFill('lightgrey').rect(
                 x,

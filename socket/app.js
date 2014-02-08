@@ -229,51 +229,61 @@ io.sockets.on('connection', function (socket) {
     }
 
     function doAITurn() {
-        if(gameData.aiDifficulty == 'easy') {
-            // Completely random
-            village_id = Math.floor(Math.random(0,1)*gameData.villages.length);
-            guild_id = Math.floor(Math.random(0,1)*gameData.guilds.length);
-        } else if(shangrila.aiDifficulty == 'medium') {
-            //@TODO implement
-            // give a greater probability for the AI to choose a village with > 0 masters randomly
-        } else if(shangrila.aiDifficulty == 'hard') {
-            //@TODO implement
-            // first try to place a master in a village with 2 masters, then with 1
-            // maybe also try to pick a village that is not connected to a village where the AI already has masters
-        }
-
         var action = 'placeTile';
 
         if(action == 'placeTile') {
             var canPlaceTile = false;
             do {
+                if(gameData.aiDifficulty == 'easy') {
+                    // Completely random
+                    village_id = Math.floor(Math.random(0,1)*gameData.villages.length);
+                    guild_id = Math.floor(Math.random(0,1)*gameData.guilds.length);
+                } else if(shangrila.aiDifficulty == 'medium') {
+                    //@TODO implement
+                    // give a greater probability for the AI to choose a village with > 0 masters randomly
+                } else if(shangrila.aiDifficulty == 'hard') {
+                    //@TODO implement
+                    // first try to place a master in a village with 2 masters, then with 1
+                    // maybe also try to pick a village that is not connected to a village where the AI already has masters
+                }
+
                 guildName = gameData.guilds[guild_id];
 
                 // Check availability
                 if(stateMachine['villages']['village_' + village_id]['player_' + stateMachine.current_player][guildName.substr(0,1)] === 0) {
-                    //console.log('Tile ' + village_id + ' - ' + guildName.substr(0,1) + ' is available');
+                    console.log('Tile ' + village_id + ' - ' + guildName.substr(0,1) + ' is available');
                     tileAvailable = true;
                 } else {
-                    //console.log('Tile ' + village_id + ' - ' + guildName.substr(0,1) + ' is not available');
+                    console.log('Tile ' + village_id + ' - ' + guildName.substr(0,1) + ' is not available');
                 }
 
+                sum = 0;
+                sumForPlayer = 0;
+                sumGuild = 0;
+
                 if(tileAvailable) {
-                    sum = 0;
-                    sumForPlayer = 0;
+                    // check whether the player already has placed this guild somewhere
                     // check whether there are less than 3 masters in this village
-                    for(i=0;i<gameData.colorNames.length;i++) {
-                        for(j=0;j<gameData.guilds.length;j++) {
-                            //console.log('Checking for village ' + village_id + ' and player ' + gameData.colorNames[i] + ' and guild ' + gameData.guilds[j]);
-                            amount = stateMachine['villages']['village_' + village_id]['player_' + gameData.colorNames[i]][gameData.guilds[j].substr(0,1)];;
-                            sum += amount;
-                            // check whether the current player has less than 2 masters in this village
-                            if(gameData.colorNames[i] == stateMachine.current_player) {
-                                sumForPlayer += amount;
+                    // check whether the current player has less than 2 masters in this village
+                    for(var village in stateMachine['villages']) {
+                        for(var player in stateMachine['villages'][village]) {
+                            for(var guild in stateMachine['villages'][village][player]) {
+                                amount = stateMachine['villages'][village][player][guild];
+                                if(village.substr(village.indexOf('_')+1) == village_id) {
+                                    sum += amount;
+                                    if(player == stateMachine.current_player) {
+                                        sumForPlayer += amount;
+                                    }
+                                }
+                                if(player == stateMachine.current_player && guild == guildName.substr(0,1) && amount != 0) {
+                                    sumGuild += amount;
+                                    console.log('Trying to place a guild that has already been placed!');
+                                }
                             }
                         }
                     }
 
-                    if(sum < 3 && sumForPlayer < 2) {
+                    if(sum < 3 && sumForPlayer < 2 && sumGuild == 0) {
                         canPlaceTile = true;
                     }
                 }
