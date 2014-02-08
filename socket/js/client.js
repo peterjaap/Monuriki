@@ -79,8 +79,6 @@ Shangrila.prototype.initNewGame = function(human_player) {
     this.drawVillages();
     this.drawGuildShields();
 
-    this.drawMenu();
-
     shangrila.showMessage('Welcome player ' + human_player + '!');
     shangrila.showMessage('Please place one of your guilds in a village (with a maximum of 3 per village).', 5000);
 
