@@ -172,6 +172,32 @@ Shangrila.prototype.drawVillages = function() {
         village.name = 'village_' + i;
         village.masterTiles = {'blue': 0, 'red': 0, 'yellow': 0, 'violet': 0};
         village.studentTiles = {'blue': 0, 'red': 0, 'yellow': 0, 'violet': 0};
+
+        village.addEventListener('mouseover', function(e) {
+            oldWidth = e.target.getBounds().width;
+            oldHeight = e.target.getBounds().height;
+            e.target.scaleX = e.target.scaleX * 1.1;
+            e.target.scaleY = e.target.scaleY * 1.1;
+            newWidth = e.target.getBounds().width;
+            newHeight = e.target.getBounds().height;
+            moveX = (newWidth - oldWidth) / 2;
+            moveY = (newHeight - oldHeight) / 2;
+            e.target.x += moveX;
+            e.target.y += moveY;
+        });
+        village.addEventListener('mouseout', function(e) {
+            oldWidth = e.target.getBounds().width;
+            oldHeight = e.target.getBounds().height;
+            e.target.scaleX = e.target.scaleX / 1.1;
+            e.target.scaleY = e.target.scaleY / 1.1;
+            newWidth = e.target.getBounds().width;
+            newHeight = e.target.getBounds().height;
+            moveX = (newWidth - oldWidth) / 2;
+            moveY = (newHeight - oldHeight) / 2;
+            e.target.x -= moveX;
+            e.target.y -= moveY;
+        });
+
         stage.addChild(village);
 
         if(identify) {

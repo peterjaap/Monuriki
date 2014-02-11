@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
              if(data.current_round == shangrila.guilds.length) { // we need as much rounds as there are guilds in setup phase
                  shangrila.setupRound = false;
-                 
+
                  shangrila.drawMenu();
 
                  shangrila.showMessage('You can now perform 1 of 3 actions; place a master, recruit students or travel.', 6000);
