@@ -32,6 +32,11 @@ document.addEventListener('DOMContentLoaded', function(){
         shangrila.placeMaster(data);
     });
 
+    socket.on('activePlayersUpdate', function(data) {
+        shangrila.activePlayers = data['activePlayers'];
+        shangrila.lobby();
+    });
+
     socket.on('passTurn', function(data) {
         shangrila.current_player = data.current_player;
         if(data.humanTurn) {
@@ -115,6 +120,7 @@ function initGame() {
         shangrila.playerOrder = gameData.playerOrder;
         shangrila.numberOfActiveMessages = gameData.numberOfActiveMessages;
         shangrila.messageHistory = gameData.messageHistory;
+        shangrila.activePlayers = gameData.activePlayers;
         shangrila.splashScreen();
     });
 

@@ -2,7 +2,7 @@ var fs = require('fs');
 var path = require('path');
 var express = require('express');
 var app = express();
-
+var util = require("util");
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -122,12 +122,15 @@ gameData.messageHistory = [];
 
 gameData.aiDifficulty = 'easy';
 
+gameData.gameMode = 'multiplayer';
+
 /* Configure initial statemachine */
 var stateMachine = {};
 stateMachine['villages'] = {}; // empty array to hold villages information
 stateMachine['current_round'] = null; // keep track of which round we are in
 stateMachine['current_player'] = null; // keep track of which player is currently playing
-stateMachine['human_player'] = null;
+stateMachine['local_player'] = null;
+stateMachine['activePlayers'] = [];
 for(i=0;i<gameData.villages.length;i++) {
     stateMachine['villages']['village_' + i] = {};
     for(j=0;j<gameData.colorNames.length;j++) {
@@ -138,20 +141,44 @@ for(i=0;i<gameData.villages.length;i++) {
     }
 }
 
-//console.log(require('util').inspect(stateMachine, true, 10));
+
+function onClientDisconnect() {
+    util.log("Player has disconnected: "+this.id);
+
+    if(stateMachine['in_lobby']) {
+        // stop game and send notice to other players
+    } else {
+
+    }
+
+};
 
 // Listen for events
 io.sockets.on('connection', function (socket) {
+    util.log("New player has connected: "+socket.id);
+    socket.on("disconnect", onClientDisconnect);
+
     socket.emit('gameData', {
         gameData: gameData
     });
     socket.on('chooseColor', function(data) {
-        gameData.playerOrder.remove(data.human_player).shuffle().unshift(data.human_player); // move the human player up to the front in the play order
-        stateMachine['human_player'] = data.human_player;
-        stateMachine['current_player'] = data.human_player; // human player always starts
+        stateMachine['current_player'] = data.local_player; // local player always starts
         stateMachine['current_round'] = 0;
-        console.log('Human player is ' + stateMachine['human_player'] + ' and we are in round ' + stateMachine.current_round);
+
+        if(gameData.gameMode == 'singleplayer') {
+            gameData.playerOrder.remove(data.local_player).shuffle().unshift(data.local_player); // move the local player up to the front in the play order
+            stateMachine['local_player'] = data.local_player;
+            console.log('Local player is ' + stateMachine['local_player'] + ' and we are in round ' + stateMachine.current_round);
+        } else {
+            gameData.playerOrder.shuffle();
+            stateMachine['activePlayers'].push(data.local_player);
+            console.log('Client ' + socket.id + ' is ' + data.local_player + ' and we are in round ' + stateMachine.current_round);
+            socket.emit('activePlayersUpdate', {
+               activePlayers: stateMachine['activePlayers']
+            });
+        }
     });
+
     socket.on('placeMaster', function(data) {
         placeMaster(data);
     });
@@ -167,13 +194,21 @@ io.sockets.on('connection', function (socket) {
                 total += guildsPlayer[guild];
             }
         }
-        if(data.player == stateMachine.human_player) {
-            socket.emit('showMessage', {message: 'You have placed ' + total + ' of the 7 masters.'});
+        if(gameData.gameMode == 'singleplayer') {
+            if(data.player == stateMachine.local_player) {
+                socket.emit('showMessage', {message: 'You have placed ' + total + ' of the 7 masters.'});
+            }
+            nextSingleplayer();
+        } else {
+            nextMultiplayer();
         }
-        next();
     }
 
-    function next() {
+    function nextMultiplayer() {
+        // not yet
+    }
+
+    function nextSingleplayer() {
         if(stateMachine['current_player'] == gameData.playerOrder[gameData.playerOrder.length-1]) {
             stateMachine['current_round'] += 1;
             stateMachine['current_player'] = gameData.playerOrder[0];
@@ -182,18 +217,18 @@ io.sockets.on('connection', function (socket) {
             stateMachine['current_player'] = gameData.playerOrder[gameData.playerOrder.indexOf(stateMachine['current_player'])+1];
             console.log('Current player is ' + stateMachine['current_player'] + ' and we are in round ' + stateMachine['current_round']);
         }
-        var humanTurn = (stateMachine['current_player'] == stateMachine['human_player']);
-        socket.emit('passTurn', {current_player: stateMachine['current_player'], humanTurn: humanTurn, current_round:stateMachine['current_round']});
+        var localTurn = (stateMachine['current_player'] == stateMachine['local_player']);
+        socket.emit('passTurn', {current_player: stateMachine['current_player'], localTurn: localTurn, current_round:stateMachine['current_round']});
 
         if(stateMachine['current_round'] == gameData.guilds.length) {
             // @TODO set stateMachine data needed for normal play - is there any needed?
         }
 
-        // If the current player is not the human player, do some AI stuff
-        if(!humanTurn) {
+        // If the current player is not the local player, do some AI stuff
+        if(!localTurn) {
             setTimeout(function() {
                 doAITurn();
-            }, 1000); // wait a few seconds for the AI to make its move to simulate a human player
+            }, 1000); // wait a few seconds for the AI to make its move to simulate a local player
         }
     }
 
