@@ -1,45 +1,14 @@
-var app = require('http').createServer(handler)
-    , io = require('socket.io').listen(app)
-    , fs = require('fs')
+var fs = require('fs');
+var path = require('path');
+var express = require('express');
+var app = express();
 
-/* Javascript files */
-io.static.add('/js/utils.js', {file: 'js/utils.js'});
-io.static.add('/js/boot.js', {file: 'js/boot.js'});
-io.static.add('/js/client.js', {file: 'js/client.js'});
-/* Images */
-io.static.add('/images/fortress.png', {mime: {
-        type: 'image/png',
-        encoding: 'utf8',
-        gzip: true
-    },
-    file: 'images/fortress.png'}
-);
-io.static.add('/images/loader.gif', {mime: {
-        type: 'image/gif',
-        encoding: 'utf8',
-        gzip: true
-    },
-        file: 'images/loader.gif'}
-);
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Run server
-app.listen(80);
-
-// Serve HTML file
-function handler (req, res) {
-    var htmlFile = 'index.html';
-    fs.readFile(__dirname + '/' + htmlFile,
-        function (err, data) {
-            if (err) {
-                res.writeHead(500);
-                return res.end('Error loading ' + htmlFile);
-            }
-
-            res.writeHead(200);
-            res.end(data);
-        });
-}
-
+var server = app.listen(80);
+var io = require('socket.io')(server);
 
 Array.prototype.remove = function() {
     var what, a = arguments, L = a.length, ax;
