@@ -14,7 +14,7 @@ Shangrila.prototype.splashScreen = function() {
     if(splashContainer = stage.getChildByName('splashContainer')) {
         stage.removeChild(splashContainer); // remove splash page from stage
     }
-    
+
     var splashContainer = new createjs.Container();
 
     var title = new createjs.Text('The Bridges of Shangri-la',(stage.canvas.width * 0.06) + 'px Arial','black');
@@ -136,7 +136,7 @@ Shangrila.prototype.lobby = function() {
         numberOfPlayers++;
     }
 
-    if(numberOfPlayers > 1 && shangrila.gameInitiator == shangrila.local_player) {
+    if(numberOfPlayers > 2 && shangrila.gameInitiator == shangrila.local_player) {
         buttonWidth = stage.canvas.width * 0.2;
         buttonHeight = buttonWidth * 0.25;
         x = (stage.canvas.width/2)-(buttonWidth/2);
@@ -165,7 +165,7 @@ Shangrila.prototype.lobby = function() {
         });
         // Set action to perform when clicked
         startButtonShape.addEventListener('click', function(event) {
-            shangrila.initNewGame();
+            socket.emit('initNewGame');
         });
 
         lobbyContainer.addChild(startButtonShape);

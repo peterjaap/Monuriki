@@ -226,6 +226,11 @@ io.sockets.on('connection', function (socket) {
         }
     });
 
+    // Game initiator has started a new game
+    socket.on('initNewGame', function() {
+       io.sockets.emit('initNewGame');
+    });
+
     // When player has placed a master, update stateMachine
     socket.on('placeMaster', function(data) {
         placeMaster(data);

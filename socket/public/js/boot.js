@@ -143,6 +143,10 @@ function initGame() {
         shangrila.splashScreen();
     });
 
+    socket.on('initNewGame', function (){
+        shangrila.initNewGame();
+    });
+
     socket.on('updateStateMachineValue', function(data) {
         for(var index in data) {
             shangrila[index] = data[index];
