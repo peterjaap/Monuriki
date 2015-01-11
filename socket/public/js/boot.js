@@ -6,7 +6,7 @@ var stage = false;
 var queue;
 var shangrila;
 
-var identify = false;
+var identify = true;
 var keepAspectRatio = true;
 var initialWidth;
 var initialHeight;
@@ -40,6 +40,8 @@ document.addEventListener('DOMContentLoaded', function(){
         shangrila.activePlayers = data;
         if(shangrila.inLobby) {
             shangrila.lobby();
+        } else if(shangrila.inSplash) {
+            shangrila.splashScreen();
         }
     });
 
@@ -119,6 +121,7 @@ function initGame() {
         staticGameData = data.staticGameData;
         shangrila = new Shangrila();
         shangrila.inLobby = false;
+        shangrila.inSplash = true;
         shangrila.guilds = staticGameData.guilds;
         shangrila.villages = staticGameData.villages;
         shangrila.villageWidth = staticGameData.villageWidth;

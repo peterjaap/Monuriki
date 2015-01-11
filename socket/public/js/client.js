@@ -11,6 +11,10 @@ function Shangrila() {
 
 /* Starts game engine & shows 'Choose color' screen */
 Shangrila.prototype.splashScreen = function() {
+    if(splashContainer = stage.getChildByName('splashContainer')) {
+        stage.removeChild(splashContainer); // remove splash page from stage
+    }
+    
     var splashContainer = new createjs.Container();
 
     var title = new createjs.Text('The Bridges of Shangri-la',(stage.canvas.width * 0.06) + 'px Arial','black');
@@ -66,6 +70,7 @@ Shangrila.prototype.splashScreen = function() {
             // Set action to perform when clicked
             startButtonShape.addEventListener('click', function (event) {
                 shangrila.local_player = event.target.color;
+                shangrila.inSplash = false;
                 shangrila.inLobby = true;
                 socket.emit('choseColor', {local_player: shangrila.local_player});
                 shangrila.showMessage('Welcome to the lobby, player ' + shangrila.local_player);
@@ -334,7 +339,7 @@ Shangrila.prototype.drawVillages = function() {
 
         if(identify) {
             var text = new createjs.Text(i,'20px Arial','#ff0000');
-            text.x = x+width/2;
+            text.x = x+width;
             text.y = y+height/2;
             text.textBaseline = 'alphabetic';
             stage.addChild(text);
