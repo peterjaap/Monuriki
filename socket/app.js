@@ -1,5 +1,8 @@
 /* This file is the actual game server; it holds all the game information in the state machine and sends
    updates to the various clients
+
+   TODO:
+   - apply consistency in how to identify players; through their client ID or their color?
  * */
 
 var fs = require('fs');
@@ -15,6 +18,7 @@ var server = app.listen(80);
 var io = require('socket.io')(server);
 
 /* Array functions */
+/* Remove item from array */
 Array.prototype.remove = function() {
     var what, a = arguments, L = a.length, ax;
     while (L && this.length) {
@@ -26,15 +30,18 @@ Array.prototype.remove = function() {
     return this;
 };
 
+/* Pick random element from array */
 Array.prototype.random = function () {
     return this[Math.floor((Math.random()*this.length))];
 };
 
+/* Shuffle array */
 Array.prototype.shuffle = function() {
     for(var j, x, i = this.length; i; j = Math.floor(Math.random() * i), x = this[--i], this[i] = this[j], this[j] = x);
     return this;
 };
 
+/* Return size (length) of object */
 Object.prototype.size = function() {
     var size = 0, key;
     for (key in this) {
@@ -43,6 +50,7 @@ Object.prototype.size = function() {
     return size;
 };
 
+/* Pick random element from object */
 Object.prototype.random = function() {
     var keys = Object.keys(this);
     return this[keys[ keys.length * Math.random() << 0]];
@@ -182,6 +190,7 @@ io.sockets.on('connection', function (socket) {
             // If the game initiator leaves the game, select a random new game initiator
             if(stateMachine.gameInitiator == colorName) {
                 stateMachine.gameInitiator = stateMachine.activePlayers.random();
+                console.log('New game initiator is ' + stateMachine.gameInitiator);
                 io.sockets.emit('updateStateMachineValue', {
                     gameInitiator:stateMachine.gameInitiator
                 });

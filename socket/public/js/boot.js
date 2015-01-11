@@ -14,6 +14,7 @@ var initialHeight;
 /* Set listener on window to resize canvas when needed */
 window.addEventListener('resize', onResize, false);
 
+/* Set all listener functions for game */
 document.addEventListener('DOMContentLoaded', function(){
     /* Set vars for width & height to allow resizing */
     initialWidth = window.innerWidth;
@@ -103,8 +104,8 @@ document.addEventListener('DOMContentLoaded', function(){
     initGame();
 });
 
+/* Initialize stage, set canvas width & height, retrieve game data and insert them into the game object */
 function initGame() {
-    /* Initialize stage, set canvas width & height, retrieve game data and insert them into the game object */
     stage = new createjs.Stage('gamecanvas');
     createjs.Touch.enable(stage);
     stage.enableMouseOver(20);
@@ -147,8 +148,24 @@ function initGame() {
     });
 }
 
+/* General tick function to update canvas */
 function tick() {
     if(stage) {
         stage.update();
     }
 }
+
+/* Set confirmation on page exit */
+var confirmOnPageExit = function (e)  {
+    e = e || window.event;
+    var message = 'By refreshing or closing this screen you will stop the game!';
+    // For IE6-8 and Firefox prior to version 4
+    if (e)
+    {
+        e.returnValue = message;
+    }
+
+    // For Chrome, Safari, IE8+ and Opera 12+
+    return message;
+};
+window.onbeforeunload = confirmOnPageExit;

@@ -2,29 +2,84 @@
    the client and to redraw various part of the game board according to the state machine
  */
 
-
-/* Set confirmation on page exit */
-var confirmOnPageExit = function (e)
-{
-    e = e || window.event;
-    var message = 'By refreshing or closing this screen you will stop the game!';
-    // For IE6-8 and Firefox prior to version 4
-    if (e)
-    {
-        e.returnValue = message;
-    }
-
-    // For Chrome, Safari, IE8+ and Opera 12+
-    return message;
-};
-window.onbeforeunload = confirmOnPageExit;
-
+/* General container function */
 function Shangrila() {
     /* Remove previous children from the stage when creating new object */
     stage.removeAllChildren();
     stage.update();
 }
 
+/* Starts game engine & shows 'Choose color' screen */
+Shangrila.prototype.splashScreen = function() {
+    var splashContainer = new createjs.Container();
+
+    var title = new createjs.Text('The Bridges of Shangri-la',(stage.canvas.width * 0.06) + 'px Arial','black');
+    bounds = title.getBounds();
+    title.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
+    title.y = stage.canvas.height * 0.25;
+    splashContainer.addChild(title);
+
+    var chosenColors = [];
+    for(var playerClientId in shangrila.activePlayers) {
+        chosenColors.push(shangrila.activePlayers[playerClientId]);
+    }
+
+    if(chosenColors.length == shangrila.colorNames.length) {
+        /* Show game is full notice */
+        var fullNotice = new createjs.Text('All colors have been chosen; game is full.',(stage.canvas.width * 0.03) + 'px Arial','black');
+        bounds = fullNotice.getBounds();
+        fullNotice.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
+        fullNotice.y = stage.canvas.height * 0.40;
+        splashContainer.addChild(fullNotice);
+    } else {
+        /* Show choose color notice */
+        var subtitle = new createjs.Text('Choose your color',(stage.canvas.width * 0.03) + 'px Arial','black');
+        bounds = subtitle.getBounds();
+        subtitle.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
+        subtitle.y = stage.canvas.height * 0.40;
+        splashContainer.addChild(subtitle);
+
+        /* Walk through the colors to display their button */
+        for (i = 0; i < shangrila.colorNames.length; i++) {
+            var colorName = shangrila.colorNames[i];
+            // Skip chosen colors so they can not be selected
+            if (chosenColors.indexOf(colorName) > -1) continue;
+
+            // Create button
+            var startButton = new createjs.Graphics().beginFill(colorName).rect(
+                (stage.canvas.width * 0.08) + ((stage.canvas.width * 0.5) - (((stage.canvas.width * 0.06) + (stage.canvas.width * 0.02)) * i)),
+                title.y * 2,
+                (stage.canvas.width * 0.06),
+                (stage.canvas.width * 0.06)
+            );
+            // Create shape for button
+            var startButtonShape = new createjs.Shape(startButton);
+            // Set color and add mouse over effects
+            startButtonShape.color = colorName;
+            startButtonShape.addEventListener('mouseover', function (event) {
+                event.target.alpha = .50;
+            });
+            startButtonShape.addEventListener('mouseout', function (event) {
+                event.target.alpha = 1;
+
+            });
+            // Set action to perform when clicked
+            startButtonShape.addEventListener('click', function (event) {
+                shangrila.local_player = event.target.color;
+                shangrila.inLobby = true;
+                socket.emit('choseColor', {local_player: shangrila.local_player});
+                shangrila.showMessage('Welcome to the lobby, player ' + shangrila.local_player);
+            });
+            // Add button to the stage
+            splashContainer.addChild(startButtonShape);
+        }
+    }
+
+    splashContainer.name = 'splashContainer';
+    stage.addChild(splashContainer);
+};
+
+/* This draws up the lobby and shows which player are waiting, who is the game initiator, etc */
 Shangrila.prototype.lobby = function() {
     shangrila.inLobby = true;
     if(splashContainer = stage.getChildByName('splashContainer')) {
@@ -127,79 +182,9 @@ Shangrila.prototype.lobby = function() {
     // initNewGame(local_player)
     lobbyContainer.name = 'lobbyContainer';
     stage.addChild(lobbyContainer);
-}
+};
 
-/* Starts game engine & shows 'Choose color' screen */
-Shangrila.prototype.splashScreen = function() {
-    var splashContainer = new createjs.Container();
-
-    var title = new createjs.Text('The Bridges of Shangri-la',(stage.canvas.width * 0.06) + 'px Arial','black');
-    bounds = title.getBounds();
-    title.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
-    title.y = stage.canvas.height * 0.25;
-    splashContainer.addChild(title);
-
-    var chosenColors = [];
-    for(var playerClientId in shangrila.activePlayers) {
-        chosenColors.push(shangrila.activePlayers[playerClientId]);
-    }
-
-    if(chosenColors.length == shangrila.colorNames.length) {
-        /* Show game is full notice */
-        var fullNotice = new createjs.Text('All colors have been chosen; game is full.',(stage.canvas.width * 0.03) + 'px Arial','black');
-        bounds = fullNotice.getBounds();
-        fullNotice.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
-        fullNotice.y = stage.canvas.height * 0.40;
-        splashContainer.addChild(fullNotice);
-    } else {
-        /* Show choose color notice */
-        var subtitle = new createjs.Text('Choose your color',(stage.canvas.width * 0.03) + 'px Arial','black');
-        bounds = subtitle.getBounds();
-        subtitle.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
-        subtitle.y = stage.canvas.height * 0.40;
-        splashContainer.addChild(subtitle);
-
-        /* Walk through the colors to display their button */
-        for (i = 0; i < shangrila.colorNames.length; i++) {
-            var colorName = shangrila.colorNames[i];
-            // Skip chosen colors so they can not be selected
-            if (chosenColors.indexOf(colorName) > -1) continue;
-
-            // Create button
-            var startButton = new createjs.Graphics().beginFill(colorName).rect(
-                (stage.canvas.width * 0.08) + ((stage.canvas.width * 0.5) - (((stage.canvas.width * 0.06) + (stage.canvas.width * 0.02)) * i)),
-                title.y * 2,
-                (stage.canvas.width * 0.06),
-                (stage.canvas.width * 0.06)
-            );
-            // Create shape for button
-            var startButtonShape = new createjs.Shape(startButton);
-            // Set color and add mouse over effects
-            startButtonShape.color = colorName;
-            startButtonShape.addEventListener('mouseover', function (event) {
-                event.target.alpha = .50;
-            });
-            startButtonShape.addEventListener('mouseout', function (event) {
-                event.target.alpha = 1;
-
-            });
-            // Set action to perform when clicked
-            startButtonShape.addEventListener('click', function (event) {
-                shangrila.local_player = event.target.color;
-                shangrila.inLobby = true;
-                socket.emit('choseColor', {local_player: shangrila.local_player});
-                shangrila.showMessage('Welcome to the lobby, player ' + shangrila.local_player);
-            });
-            // Add button to the stage
-            splashContainer.addChild(startButtonShape);
-        }
-    }
-
-    splashContainer.name = 'splashContainer';
-    stage.addChild(splashContainer);
-}
-
-/* Initializes new game. Used when player is chosen or when new game needs to be started from beginning */
+/* Initializes new game board. Used when game initiator starts the game */
 Shangrila.prototype.initNewGame = function() {
     this.setupRound = true;
 
@@ -231,6 +216,7 @@ Shangrila.prototype.initNewGame = function() {
 
 }
 
+/* Draws the sidebar of the game board when in-game */
 Shangrila.prototype.drawMenu = function() {
     var menuScreen = new createjs.Container();
     menuScreen.name = 'menuScreen';
@@ -295,7 +281,7 @@ Shangrila.prototype.drawMenu = function() {
         }
     }
     stage.addChild(menuScreen);
-}
+};
 
 /* Draw the villages on the canvas */
 Shangrila.prototype.drawVillages = function() {
@@ -406,6 +392,7 @@ Shangrila.prototype.removeBridge = function(data) {
 }
 
 /* See whether a stone of the wise men needs to be placed in a village */
+/* TODO: the recalculation of this should be moved to app.js */
 Shangrila.prototype.recalculateStoneOfTheWiseMenPlacings = function() {
     var connected = [];
     for(i=0;i<this.bridges.length;i++) {
@@ -432,7 +419,6 @@ Shangrila.prototype.recalculateStoneOfTheWiseMenPlacings = function() {
         alert('Game ends!');
     }
 }
-
 
 /* Draw stone of the wise men */
 Shangrila.prototype.drawStoneOfTheWiseMen = function(village_id) {
@@ -594,6 +580,7 @@ Shangrila.prototype.drawGuildShields = function() {
     }
 }
 
+/* Draws the master on the chosen city for a certain player */
 Shangrila.prototype.placeMaster = function(data, event) {
     var village = stage.getChildByName('village_' + data.village_id);
     var guildShapeSmall = stage.getChildByName('guild_shape_small_' + data.guild_id + '_' + data.village_id);
@@ -655,7 +642,7 @@ Shangrila.prototype.placeMaster = function(data, event) {
     }
 }
 
-
+/* Show a message that is pushed from app.js */
 Shangrila.prototype.showMessage = function(messageText, duration) {
     if(typeof duration == 'undefined') duration = 2000;
 
