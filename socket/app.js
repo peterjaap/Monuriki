@@ -1,3 +1,7 @@
+/* This file is the actual game server; it holds all the game information in the state machine and sends
+   updates to the various clients
+ * */
+
 var fs = require('fs');
 var path = require('path');
 var express = require('express');
@@ -10,6 +14,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 var server = app.listen(80);
 var io = require('socket.io')(server);
 
+/* Array functions */
 Array.prototype.remove = function() {
     var what, a = arguments, L = a.length, ax;
     while (L && this.length) {
@@ -23,71 +28,77 @@ Array.prototype.remove = function() {
 
 Array.prototype.random = function () {
     return this[Math.floor((Math.random()*this.length))];
-}
+};
 
 Array.prototype.shuffle = function() {
-    var i = this.length, j, temp;
-    if ( i == 0 ) return this;
-    while ( --i ) {
-        j = Math.floor( Math.random() * ( i + 1 ) );
-        temp = this[i];
-        this[i] = this[j];
-        this[j] = temp;
-    }
+    for(var j, x, i = this.length; i; j = Math.floor(Math.random() * i), x = this[--i], this[i] = this[j], this[j] = x);
     return this;
-}
+};
+
+Object.prototype.size = function() {
+    var size = 0, key;
+    for (key in this) {
+        if (this.hasOwnProperty(key)) size++;
+    }
+    return size;
+};
+
+Object.prototype.random = function() {
+    var keys = Object.keys(this);
+    return this[keys[ keys.length * Math.random() << 0]];
+};
 
 /* Configure game data object */
-var gameData = {};
+var staticGameData = {};
 
 /* Define the guilds */
-gameData.guilds = ['Healer','Dragonbreather','Firekeeper','Priest','Rainmaker','Astrologer','Yeti-whisperer'];
+staticGameData.guilds = ['Healer','Dragonbreather','Firekeeper','Priest','Rainmaker','Astrologer','Yeti-whisperer'];
 
 /* Define positions of villages */
-gameData.villages = [];
-gameData.villages[0] = {top:5,left:8 };
-gameData.villages[1] = {top:36, left:14 };
-gameData.villages[2] = {top:64, left:6 };
-gameData.villages[3] = {top:5, left:43 };
-gameData.villages[4] = {top:23, left:33 };
-gameData.villages[5] = {top:49, left:36 };
-gameData.villages[6] = {top:79, left:28 };
-gameData.villages[7] = {top:21, left:59 };
-gameData.villages[8] = {top:38, left:56 };
-gameData.villages[9] = {top:78, left:74 };
-gameData.villages[10] = {top:9, left:73 };
-gameData.villages[11] = {top:40, left:77 };
-gameData.villages[12] = {top:57, left:70 };
-gameData.villageWidth = 0.12;
-gameData.villageHeight = 0.12;
+staticGameData.villages = [];
+staticGameData.villages[0] = {top:5,left:8 };
+staticGameData.villages[1] = {top:36, left:14 };
+staticGameData.villages[2] = {top:64, left:6 };
+staticGameData.villages[3] = {top:5, left:43 };
+staticGameData.villages[4] = {top:23, left:33 };
+staticGameData.villages[5] = {top:49, left:36 };
+staticGameData.villages[6] = {top:79, left:28 };
+staticGameData.villages[7] = {top:21, left:59 };
+staticGameData.villages[8] = {top:38, left:56 };
+staticGameData.villages[9] = {top:78, left:74 };
+staticGameData.villages[10] = {top:9, left:73 };
+staticGameData.villages[11] = {top:40, left:77 };
+staticGameData.villages[12] = {top:57, left:70 };
+staticGameData.villageWidth = 0.12;
+staticGameData.villageHeight = 0.12;
 
 /* Define the bridges that connect the villages
- * From and to refers to index key in the gameData.villages object above
+ * From and to refers to index key in the staticGameData.villages object above
  */
-gameData.bridges = [];
-gameData.bridges[0] = {from:0, to:2};
-gameData.bridges[1] = {from:2, to:6};
-gameData.bridges[2] = {from:0, to:1};
-gameData.bridges[3] = {from:1, to:2};
-gameData.bridges[4] = {from:0, to:4};
-gameData.bridges[5] = {from:4, to:1};
-gameData.bridges[6] = {from:1, to:6};
-gameData.bridges[7] = {from:0, to:3};
-gameData.bridges[8] = {from:4, to:7};
-gameData.bridges[9] = {from:3, to:10};
-gameData.bridges[10] = {from:7, to:10};
-gameData.bridges[11] = {from:10, to:11};
-gameData.bridges[12] = {from:3, to:7};
-gameData.bridges[13] = {from:4, to:5};
-gameData.bridges[14] = {from:5, to:6};
-gameData.bridges[15] = {from:5, to:9};
-gameData.bridges[16] = {from:5, to:8};
-gameData.bridges[17] = {from:6, to:9};
-gameData.bridges[18] = {from:9, to:12};
-gameData.bridges[19] = {from:8, to:12};
-gameData.bridges[20] = {from:11, to:12};
-gameData.bridges[21] = {from:7, to:11};
-gameData.bridges[22] = {from:7, to:8};
+staticGameData.bridges = [];
+staticGameData.bridges[0] = {from:0, to:2};
+staticGameData.bridges[1] = {from:2, to:6};
+staticGameData.bridges[2] = {from:0, to:1};
+staticGameData.bridges[3] = {from:1, to:2};
+staticGameData.bridges[4] = {from:0, to:4};
+staticGameData.bridges[5] = {from:4, to:1};
+staticGameData.bridges[6] = {from:1, to:6};
+staticGameData.bridges[7] = {from:0, to:3};
+staticGameData.bridges[8] = {from:4, to:7};
+staticGameData.bridges[9] = {from:3, to:10};
+staticGameData.bridges[10] = {from:7, to:10};
+staticGameData.bridges[11] = {from:10, to:11};
+staticGameData.bridges[12] = {from:3, to:7};
+staticGameData.bridges[13] = {from:4, to:5};
+staticGameData.bridges[14] = {from:5, to:6};
+staticGameData.bridges[15] = {from:5, to:9};
+staticGameData.bridges[16] = {from:5, to:8};
+staticGameData.bridges[17] = {from:6, to:9};
+staticGameData.bridges[18] = {from:9, to:12};
+staticGameData.bridges[19] = {from:8, to:12};
+staticGameData.bridges[20] = {from:11, to:12};
+staticGameData.bridges[21] = {from:7, to:11};
+staticGameData.bridges[22] = {from:7, to:8};
 
 /* Define the colors that are used for the various players */
 /**
@@ -96,33 +107,31 @@ gameData.bridges[22] = {from:7, to:8};
  *  - Yellow (Gyl-Den)
  *  - Violet (Li-Lamas)
  */
-gameData.colorNames = ['violet','yellow','red','blue'];
-gameData.colors = {};
-gameData.colors['blue'] = {};
-gameData.colors['blue']['gamecanvasBackground'] = 'lightblue';
-gameData.colors['blue']['controldeckBackground'] = '#7ec1d7';
+staticGameData.colorNames = ['violet','yellow','red','blue'];
+staticGameData.colors = {};
+staticGameData.colors['blue'] = {};
+staticGameData.colors['blue']['gamecanvasBackground'] = 'lightblue';
+staticGameData.colors['blue']['controldeckBackground'] = '#7ec1d7';
 
-gameData.colors['red'] = {};
-gameData.colors['red']['gamecanvasBackground'] = '#f46d6d';
-gameData.colors['red']['controldeckBackground'] = '#b80000';
+staticGameData.colors['red'] = {};
+staticGameData.colors['red']['gamecanvasBackground'] = '#f46d6d';
+staticGameData.colors['red']['controldeckBackground'] = '#b80000';
 
-gameData.colors['yellow'] = {};
-gameData.colors['yellow']['gamecanvasBackground'] = '#fffcaa';
-gameData.colors['yellow']['controldeckBackground'] = '#d8d500';
+staticGameData.colors['yellow'] = {};
+staticGameData.colors['yellow']['gamecanvasBackground'] = '#fffcaa';
+staticGameData.colors['yellow']['controldeckBackground'] = '#d8d500';
 
-gameData.colors['violet'] = {};
-gameData.colors['violet']['gamecanvasBackground'] = '#e6aaff';
-gameData.colors['violet']['controldeckBackground'] = '#58007d';
+staticGameData.colors['violet'] = {};
+staticGameData.colors['violet']['gamecanvasBackground'] = '#e6aaff';
+staticGameData.colors['violet']['controldeckBackground'] = '#58007d';
 
-gameData.numberOfActiveMessages = 0;
+staticGameData.numberOfActiveMessages = 0;
 
-gameData.playerOrder = ['blue','red','yellow','violet']; // initial order, this gets shuffled
+staticGameData.messageHistory = [];
 
-gameData.messageHistory = [];
+staticGameData.aiDifficulty = 'easy';
 
-gameData.aiDifficulty = 'easy';
-
-gameData.gameMode = 'multiplayer';
+staticGameData.gameMode = 'multiplayer';
 
 /* Configure initial statemachine */
 var stateMachine = {};
@@ -130,55 +139,85 @@ stateMachine['villages'] = {}; // empty array to hold villages information
 stateMachine['current_round'] = null; // keep track of which round we are in
 stateMachine['current_player'] = null; // keep track of which player is currently playing
 stateMachine['local_player'] = null;
-stateMachine['activePlayers'] = [];
-for(i=0;i<gameData.villages.length;i++) {
+stateMachine['activePlayers'] = {};
+stateMachine['playerOrder'] = ['blue','red','yellow','violet'];
+stateMachine['playerOrder'] = stateMachine['playerOrder'].shuffle(); // random order through shuffling
+for(i=0;i<staticGameData.villages.length;i++) {
     stateMachine['villages']['village_' + i] = {};
-    for(j=0;j<gameData.colorNames.length;j++) {
-        stateMachine['villages']['village_' + i]['player_' + gameData.playerOrder[j]] = {};
-        for(k=0;k<gameData.guilds.length;k++) {
-            stateMachine['villages']['village_' + i]['player_' + gameData.playerOrder[j]][gameData.guilds[k].substr(0,1)] = 0;
+    for(j=0;j<staticGameData.colorNames.length;j++) {
+        stateMachine['villages']['village_' + i]['player_' + stateMachine.playerOrder[j]] = {};
+        for(k=0;k<staticGameData.guilds.length;k++) {
+            stateMachine['villages']['village_' + i]['player_' + stateMachine.playerOrder[j]][staticGameData.guilds[k].substr(0,1)] = 0;
         }
     }
 }
 
+// Log complete state machine
+function logSM() {
+    util.log(util.inspect(stateMachine,{showHidden:false,depth:10}));
+}
 
-function onClientDisconnect() {
-    util.log("Player has disconnected: "+this.id);
+logSM();
 
-    if(stateMachine['in_lobby']) {
-        // stop game and send notice to other players
-    } else {
-
-    }
-
-};
-
-// Listen for events
+// Listen for server side events
 io.sockets.on('connection', function (socket) {
+    // Send message new player has connected
     util.log("New player has connected: "+socket.id);
-    socket.on("disconnect", onClientDisconnect);
 
-    socket.emit('gameData', {
-        gameData: gameData
+    // Send relevant game data to the client
+    socket.emit('setInitialGameData', {
+        staticGameData:staticGameData,
+        stateMachine:stateMachine
     });
-    socket.on('chooseColor', function(data) {
+
+    // Show splash screen to start the game
+    socket.emit('showSplashScreen', true);
+
+    // Asynchronous functions
+    // Set action what to do when player disconnects
+    socket.on("disconnect", function () {
+        util.log("Player has disconnected: "+this.id);
+        if(stateMachine.activePlayers.hasOwnProperty(this.id)) {
+            colorName = stateMachine.activePlayers[this.id];
+            // If the game initiator leaves the game, select a random new game initiator
+            if(stateMachine.gameInitiator == colorName) {
+                stateMachine.gameInitiator = stateMachine.activePlayers.random();
+                io.sockets.emit('updateStateMachineValue', {
+                    gameInitiator:stateMachine.gameInitiator
+                });
+            }
+            // Remove player from stateMachine
+            delete stateMachine.activePlayers[this.id];
+        }
+        // Update all clients
+        io.sockets.emit('activePlayersUpdate', stateMachine.activePlayers);
+    });
+
+    // When player has chosen a color, update stateMachine
+    socket.on('choseColor', function(data) {
         stateMachine['current_player'] = data.local_player; // local player always starts
         stateMachine['current_round'] = 0;
 
-        if(gameData.gameMode == 'singleplayer') {
-            gameData.playerOrder.remove(data.local_player).shuffle().unshift(data.local_player); // move the local player up to the front in the play order
+        if(staticGameData.gameMode == 'singleplayer') {
+            stateMachine.playerOrder.remove(data.local_player).shuffle().unshift(data.local_player); // move the local player up to the front in the play order
             stateMachine['local_player'] = data.local_player;
             console.log('Local player is ' + stateMachine['local_player'] + ' and we are in round ' + stateMachine.current_round);
         } else {
-            gameData.playerOrder.shuffle();
-            stateMachine['activePlayers'].push(data.local_player);
+            // Set current client id as with color key in activePlayers list
+            stateMachine.activePlayers[socket.id] = data.local_player;
             console.log('Client ' + socket.id + ' is ' + data.local_player + ' and we are in round ' + stateMachine.current_round);
-            socket.emit('activePlayersUpdate', {
-               activePlayers: stateMachine['activePlayers']
+            if(stateMachine.activePlayers.size() == 1) {
+                stateMachine.gameInitiator = data.local_player;
+            }
+            // Update all clients
+            io.sockets.emit('updateStateMachineValue', {
+                gameInitiator:stateMachine.gameInitiator
             });
+            io.sockets.emit('activePlayersUpdate', stateMachine.activePlayers);
         }
     });
 
+    // When player has placed a master, update stateMachine
     socket.on('placeMaster', function(data) {
         placeMaster(data);
     });
@@ -188,13 +227,15 @@ io.sockets.on('connection', function (socket) {
         stateMachine['villages']['village_' + data.village_id]['player_' + data.player][data.guildName.substr(0,1)] += 1;
         // Calculate end of turn
         var total = 0;
-        for(i=0;i<gameData.villages.length;i++) {
+        for(i=0;i<staticGameData.villages.length;i++) {
             guildsPlayer = stateMachine['villages']['village_' + i]['player_' + data.player];
             for(guild in guildsPlayer) {
-                total += guildsPlayer[guild];
+                if(guildsPlayer.hasOwnProperty('guild')) {
+                    total += guildsPlayer[guild];
+                }
             }
         }
-        if(gameData.gameMode == 'singleplayer') {
+        if(staticGameData.gameMode == 'singleplayer') {
             if(data.player == stateMachine.local_player) {
                 socket.emit('showMessage', {message: 'You have placed ' + total + ' of the 7 masters.'});
             }
@@ -208,19 +249,24 @@ io.sockets.on('connection', function (socket) {
         // not yet
     }
 
+
+
+    // ################# SINGLE PLAYER FUNCTIONS #################
+
+    // Decide which player is the next player (for singeplayer)
     function nextSingleplayer() {
-        if(stateMachine['current_player'] == gameData.playerOrder[gameData.playerOrder.length-1]) {
+        if(stateMachine['current_player'] == staticGameData.playerOrder[staticGameData.playerOrder.length-1]) {
             stateMachine['current_round'] += 1;
-            stateMachine['current_player'] = gameData.playerOrder[0];
+            stateMachine['current_player'] = staticGameData.playerOrder[0];
             console.log('Current player is ' + stateMachine['current_player'] + ' and we are now in round ' + stateMachine['current_round']);
         } else {
-            stateMachine['current_player'] = gameData.playerOrder[gameData.playerOrder.indexOf(stateMachine['current_player'])+1];
+            stateMachine['current_player'] = staticGameData.playerOrder[staticGameData.playerOrder.indexOf(stateMachine['current_player'])+1];
             console.log('Current player is ' + stateMachine['current_player'] + ' and we are in round ' + stateMachine['current_round']);
         }
         var localTurn = (stateMachine['current_player'] == stateMachine['local_player']);
         socket.emit('passTurn', {current_player: stateMachine['current_player'], localTurn: localTurn, current_round:stateMachine['current_round']});
 
-        if(stateMachine['current_round'] == gameData.guilds.length) {
+        if(stateMachine['current_round'] == staticGameData.guilds.length) {
             // @TODO set stateMachine data needed for normal play - is there any needed?
         }
 
@@ -232,21 +278,24 @@ io.sockets.on('connection', function (socket) {
         }
     }
 
+    // Pick a random village (for singeplayer)
     function randomVillage() {
-        return Math.floor(Math.random(0,1)*gameData.villages.length);
+        return Math.floor(Math.random(0,1)*staticGameData.villages.length);
     }
 
+    // Pick a random guild (for singeplayer)
     function randomGuild() {
-        return Math.floor(Math.random(0,1)*gameData.guilds.length);
+        return Math.floor(Math.random(0,1)*staticGameData.guilds.length);
     }
 
+    // Do an AI turn (for singeplayer)
     function doAITurn() {
         var action = 'placeTile';
 
         if(action == 'placeTile') {
             canPlaceTile = false;
             do {
-                if(gameData.aiDifficulty == 'easy') {
+                if(staticGameData.aiDifficulty == 'easy') {
                     // Completely random
                     village_id = randomVillage();
                     guild_id = randomGuild();
@@ -259,7 +308,7 @@ io.sockets.on('connection', function (socket) {
                     // maybe also try to pick a village that is not connected to a village where the AI already has masters
                 }
 
-                guildName = gameData.guilds[guild_id];
+                guildName = staticGameData.guilds[guild_id];
 
                 sum = 0;
                 sumForPlayer = 0;

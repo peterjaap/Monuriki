@@ -1,3 +1,7 @@
+/* This file is included in the client side and contains all the functions needed to interact with
+   the client and to redraw various part of the game board according to the state machine
+ */
+
 
 /* Set confirmation on page exit */
 var confirmOnPageExit = function (e)
@@ -22,6 +26,7 @@ function Shangrila() {
 }
 
 Shangrila.prototype.lobby = function() {
+    shangrila.inLobby = true;
     if(splashContainer = stage.getChildByName('splashContainer')) {
         stage.removeChild(splashContainer); // remove splash page from stage
     }
@@ -37,24 +42,41 @@ Shangrila.prototype.lobby = function() {
     title.y = stage.canvas.height * 0.25;
     lobbyContainer.addChild(title);
 
+    var numberOfPlayers = 0;
     // Walk through the players to show who's in the game
-    for(i=0;i<shangrila.activePlayers.length;i++) {
+    for(var playerClientId in shangrila.activePlayers) {
+        var playerColor = shangrila.activePlayers[playerClientId];
         // Create button
-        var playerSquare = new createjs.Graphics().beginFill(shangrila.activePlayers[i]).rect(
-            (stage.canvas.width * 0.08) + ((stage.canvas.width * 0.5) - (((stage.canvas.width * 0.06)+(stage.canvas.width * 0.02)) * i)),
-            title.y * 2,
-            (stage.canvas.width * 0.06),
-            (stage.canvas.width * 0.06)
+        playerSquareX = (stage.canvas.width * 0.08) + ((stage.canvas.width * 0.5) - (((stage.canvas.width * 0.06)+(stage.canvas.width * 0.02)) * numberOfPlayers));
+        playerSquareY = title.y * 2;
+        playerSquareWidth = (stage.canvas.width * 0.06);
+        playerSquareHeight = (stage.canvas.width * 0.06);
+        var playerSquare = new createjs.Graphics().beginFill(playerColor).rect(
+            playerSquareX,
+            playerSquareY,
+            playerSquareWidth,
+            playerSquareHeight
         );
         // Create shape for button
         var playerSquareShape = new createjs.Shape(playerSquare);
+        // Set bounds
+        playerSquareShape.setBounds(playerSquareX,playerSquareY,playerSquareWidth,playerSquareHeight);
         // Set color
-        playerSquareShape.color = shangrila.activePlayers[i];
+        playerSquareShape.color = playerColor;
         // Add button to the stage
         lobbyContainer.addChild(playerSquareShape);
+        // Add 'me' text for local player
+        if(shangrila.local_player == playerColor) {
+            var meText = new createjs.Text('Me',(stage.canvas.width * 0.03) + 'px Arial','white');
+            console.log(playerSquareShape.globalToLocal(0,0));
+            meText.x = playerSquareShape.getBounds().x + (playerSquareShape.getBounds().width - meText.getBounds().width)/2;
+            meText.y = playerSquareShape.getBounds().y + (playerSquareShape.getBounds().height - meText.getBounds().height)/2;
+            lobbyContainer.addChild(meText);
+        }
+        numberOfPlayers++;
     }
 
-    if(shangrila.activePlayers.length > 1) {
+    if(numberOfPlayers > 1 && shangrila.gameInitiator == shangrila.local_player) {
         buttonWidth = stage.canvas.width * 0.2;
         buttonHeight = buttonWidth * 0.25;
         x = (stage.canvas.width/2)-(buttonWidth/2);
@@ -73,7 +95,7 @@ Shangrila.prototype.lobby = function() {
         buttonText.y = y + (buttonHeight * 0.1);
 
         // Set color and add mouse over effects
-        startButtonShape.color = this.colorNames[i];
+        startButtonShape.color = shangrila.colorNames[i];
         startButtonShape.addEventListener('mouseover', function(event) {
             event.target.alpha = .50;
         });
@@ -88,6 +110,18 @@ Shangrila.prototype.lobby = function() {
 
         lobbyContainer.addChild(startButtonShape);
         lobbyContainer.addChild(buttonText);
+    } else {
+        /* Waiting notices */
+        if(shangrila.gameInitiator == shangrila.local_player) {
+            waitingText = 'Waiting for other players to join the game';
+        } else {
+            waitingText = 'Waiting for ' + shangrila.gameInitiator + ' to start the game.';
+        }
+        var waitingToStartNotice = new createjs.Text(waitingText, (stage.canvas.width * 0.02) + 'px Arial', 'black');
+        bounds = waitingToStartNotice.getBounds();
+        waitingToStartNotice.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
+        waitingToStartNotice.y = stage.canvas.height * 0.40;
+        lobbyContainer.addChild(waitingToStartNotice);
     }
 
     // initNewGame(local_player)
@@ -105,44 +139,60 @@ Shangrila.prototype.splashScreen = function() {
     title.y = stage.canvas.height * 0.25;
     splashContainer.addChild(title);
 
-    var subtitle = new createjs.Text('Choose your color',(stage.canvas.width * 0.03) + 'px Arial','black');
-    bounds = subtitle.getBounds();
-    subtitle.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
-    subtitle.y = stage.canvas.height * 0.40;
-    splashContainer.addChild(subtitle);
+    var chosenColors = [];
+    for(var playerClientId in shangrila.activePlayers) {
+        chosenColors.push(shangrila.activePlayers[playerClientId]);
+    }
 
-    /* Walk through the colors to display their button */
-    for(i=0;i<this.colorNames.length;i++) {
-        // Create button
-        var startButton = new createjs.Graphics().beginFill(this.colorNames[i]).rect(
-            (stage.canvas.width * 0.08) + ((stage.canvas.width * 0.5) - (((stage.canvas.width * 0.06)+(stage.canvas.width * 0.02)) * i)),
-            title.y * 2,
-            (stage.canvas.width * 0.06),
-            (stage.canvas.width * 0.06)
-        );
-        // Create shape for button
-        var startButtonShape = new createjs.Shape(startButton);
-        // Set color and add mouse over effects
-        startButtonShape.color = this.colorNames[i];
-        startButtonShape.addEventListener('mouseover', function(event) {
-            event.target.alpha = .50;
-        });
-        startButtonShape.addEventListener('mouseout', function(event) {
-            event.target.alpha = 1;
+    if(chosenColors.length == shangrila.colorNames.length) {
+        /* Show game is full notice */
+        var fullNotice = new createjs.Text('All colors have been chosen; game is full.',(stage.canvas.width * 0.03) + 'px Arial','black');
+        bounds = fullNotice.getBounds();
+        fullNotice.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
+        fullNotice.y = stage.canvas.height * 0.40;
+        splashContainer.addChild(fullNotice);
+    } else {
+        /* Show choose color notice */
+        var subtitle = new createjs.Text('Choose your color',(stage.canvas.width * 0.03) + 'px Arial','black');
+        bounds = subtitle.getBounds();
+        subtitle.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
+        subtitle.y = stage.canvas.height * 0.40;
+        splashContainer.addChild(subtitle);
 
-        });
-        // Set action to perform when clicked
-        startButtonShape.addEventListener('click', function(event) {
-            this.local_player = event.target.color;
-            socket.emit('chooseColor', { local_player: this.local_player});
-            shangrila.activePlayers = [];
-            shangrila.lobby();
+        /* Walk through the colors to display their button */
+        for (i = 0; i < shangrila.colorNames.length; i++) {
+            var colorName = shangrila.colorNames[i];
+            // Skip chosen colors so they can not be selected
+            if (chosenColors.indexOf(colorName) > -1) continue;
 
-            shangrila.showMessage('Welcome to the lobby, player ' + local_player);
-            shangrila.showMessage('Please wait for at least 2 players to start the game');
-        });
-        // Add button to the stage
-        splashContainer.addChild(startButtonShape);
+            // Create button
+            var startButton = new createjs.Graphics().beginFill(colorName).rect(
+                (stage.canvas.width * 0.08) + ((stage.canvas.width * 0.5) - (((stage.canvas.width * 0.06) + (stage.canvas.width * 0.02)) * i)),
+                title.y * 2,
+                (stage.canvas.width * 0.06),
+                (stage.canvas.width * 0.06)
+            );
+            // Create shape for button
+            var startButtonShape = new createjs.Shape(startButton);
+            // Set color and add mouse over effects
+            startButtonShape.color = colorName;
+            startButtonShape.addEventListener('mouseover', function (event) {
+                event.target.alpha = .50;
+            });
+            startButtonShape.addEventListener('mouseout', function (event) {
+                event.target.alpha = 1;
+
+            });
+            // Set action to perform when clicked
+            startButtonShape.addEventListener('click', function (event) {
+                shangrila.local_player = event.target.color;
+                shangrila.inLobby = true;
+                socket.emit('choseColor', {local_player: shangrila.local_player});
+                shangrila.showMessage('Welcome to the lobby, player ' + shangrila.local_player);
+            });
+            // Add button to the stage
+            splashContainer.addChild(startButtonShape);
+        }
     }
 
     splashContainer.name = 'splashContainer';
@@ -162,13 +212,13 @@ Shangrila.prototype.initNewGame = function() {
     this.controldeckWidth = stage.canvas.width*0.2;
 
     /* Draw background game board */
-    var graphicsGamecanvas = new createjs.Graphics().beginFill(this.colors[this.local_player]['gamecanvasBackground']).rect(0, 0, this.gameboardWidth, stage.canvas.height);
+    var graphicsGamecanvas = new createjs.Graphics().beginFill(this.colors[shangrila.local_player]['gamecanvasBackground']).rect(0, 0, this.gameboardWidth, stage.canvas.height);
     var backgroundGamecanvas = new createjs.Shape(graphicsGamecanvas);
     backgroundGamecanvas.name = 'backgroundGamecanvas';
     stage.addChild(backgroundGamecanvas);
 
     /* Draw background control deck */
-    var graphicsControldeck = new createjs.Graphics().beginFill(this.colors[this.local_player]['controldeckBackground']).rect(this.gameboardWidth, 0, this.controldeckWidth, stage.canvas.height);
+    var graphicsControldeck = new createjs.Graphics().beginFill(this.colors[shangrila.local_player]['controldeckBackground']).rect(this.gameboardWidth, 0, this.controldeckWidth, stage.canvas.height);
     var backgroundControldeck = new createjs.Shape(graphicsControldeck);
     stage.addChild(backgroundControldeck);
 

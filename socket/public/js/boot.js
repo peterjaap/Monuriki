@@ -1,9 +1,12 @@
+/* This file runs client side and is run in the boot process. This controls
+   all non-game turn related functions and sets all the socket listeners
+ */
+
 var stage = false;
 var queue;
 var shangrila;
 
 var identify = false;
-
 var keepAspectRatio = true;
 var initialWidth;
 var initialHeight;
@@ -33,8 +36,10 @@ document.addEventListener('DOMContentLoaded', function(){
     });
 
     socket.on('activePlayersUpdate', function(data) {
-        shangrila.activePlayers = data['activePlayers'];
-        shangrila.lobby();
+        shangrila.activePlayers = data;
+        if(shangrila.inLobby) {
+            shangrila.lobby();
+        }
     });
 
     socket.on('passTurn', function(data) {
@@ -107,23 +112,39 @@ function initGame() {
     stage.canvas.width = window.innerWidth;
     stage.canvas.height = window.innerHeight;
 
-    socket.on('gameData', function(data) {
-        gameData = data.gameData;
+    // Set initial game data in session object
+    socket.on('setInitialGameData', function(data) {
+        // Fill static game data
+        staticGameData = data.staticGameData;
         shangrila = new Shangrila();
-        shangrila.guilds = gameData.guilds;
-        shangrila.villages = gameData.villages;
-        shangrila.villageWidth = gameData.villageWidth;
-        shangrila.villageHeight = gameData.villageHeight;
-        shangrila.bridges = gameData.bridges;
-        shangrila.colorNames = gameData.colorNames;
-        shangrila.colors = gameData.colors;
-        shangrila.playerOrder = gameData.playerOrder;
-        shangrila.numberOfActiveMessages = gameData.numberOfActiveMessages;
-        shangrila.messageHistory = gameData.messageHistory;
-        shangrila.activePlayers = gameData.activePlayers;
+        shangrila.inLobby = false;
+        shangrila.guilds = staticGameData.guilds;
+        shangrila.villages = staticGameData.villages;
+        shangrila.villageWidth = staticGameData.villageWidth;
+        shangrila.villageHeight = staticGameData.villageHeight;
+        shangrila.bridges = staticGameData.bridges;
+        shangrila.colorNames = staticGameData.colorNames;
+        shangrila.colors = staticGameData.colors;
+        shangrila.numberOfActiveMessages = staticGameData.numberOfActiveMessages;
+        shangrila.messageHistory = staticGameData.messageHistory;
+
+        // Fill state machine data
+        stateMachine = data.stateMachine;
+        shangrila.activePlayers = stateMachine.activePlayers;
+        shangrila.playerOrder = stateMachine.playerOrder;
+    });
+
+    socket.on('showSplashScreen', function(show) {
+        // Show splash screen to start the game
         shangrila.splashScreen();
     });
 
+    socket.on('updateStateMachineValue', function(data) {
+        for(var index in data) {
+            shangrila[index] = data[index];
+            console.log('State machine in var shangrila.' + index + ' is set to ' + data[index]);
+        }
+    });
 }
 
 function tick() {
