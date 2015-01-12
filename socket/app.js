@@ -145,10 +145,10 @@ staticGameData.gameMode = 'multiplayer';
 var stateMachine = {};
 stateMachine['villages'] = {}; // empty array to hold villages information
 stateMachine['current_round'] = null; // keep track of which round we are in
-stateMachine['current_player'] = null; // keep track of which player is currently playing
+stateMachine['currentPlayer'] = null; // keep track of which player is currently playing
 stateMachine['local_player'] = null;
 stateMachine['activePlayers'] = {};
-stateMachine['playerOrder'] = ['blue','red','yellow','violet'];
+stateMachine['playerOrder'] = ['blue','red','yellow','violet']; // for singleplayer
 stateMachine['playerOrder'] = stateMachine['playerOrder'].shuffle(); // random order through shuffling
 for(i=0;i<staticGameData.villages.length;i++) {
     stateMachine['villages']['village_' + i] = {};
@@ -198,16 +198,18 @@ io.sockets.on('connection', function (socket) {
             // Remove player from stateMachine
             delete stateMachine.activePlayers[this.id];
         }
+        console.log('Current players; ');
+        util.log(util.inspect(stateMachine.activePlayers,{showHidden:false,depth:10}));
         // Update all clients
         io.sockets.emit('activePlayersUpdate', stateMachine.activePlayers);
     });
 
     // When player has chosen a color, update stateMachine
     socket.on('choseColor', function(data) {
-        stateMachine['current_player'] = data.local_player; // local player always starts
         stateMachine['current_round'] = 0;
 
         if(staticGameData.gameMode == 'singleplayer') {
+            stateMachine['currentPlayer'] = data.local_player; // local player always starts
             stateMachine.playerOrder.remove(data.local_player).shuffle().unshift(data.local_player); // move the local player up to the front in the play order
             stateMachine['local_player'] = data.local_player;
             console.log('Local player is ' + stateMachine['local_player'] + ' and we are in round ' + stateMachine.current_round);
@@ -222,13 +224,30 @@ io.sockets.on('connection', function (socket) {
             io.sockets.emit('updateStateMachineValue', {
                 gameInitiator:stateMachine.gameInitiator
             });
+            console.log('Current players; ');
+            util.log(util.inspect(stateMachine.activePlayers,{showHidden:false,depth:10}));
             io.sockets.emit('activePlayersUpdate', stateMachine.activePlayers);
         }
     });
 
     // Game initiator has started a new game
     socket.on('initNewGame', function() {
-       io.sockets.emit('initNewGame');
+        // Set player order
+        var playerOrder = [];
+        for(var playerClientId in stateMachine.activePlayers) {
+            if(stateMachine.activePlayers.hasOwnProperty(playerClientId)) {
+                playerOrder.push(stateMachine.activePlayers[playerClientId]);
+            }
+        }
+        stateMachine.playerOrder = playerOrder.shuffle();
+        console.log('Player order; ');
+        util.log(util.inspect(stateMachine.playerOrder));
+        stateMachine.currentPlayer = stateMachine.playerOrder[0];
+        io.sockets.emit('initNewGame');
+        io.sockets.send('It is player ' + stateMachine.currentPlayer + '\'s turn');
+        io.sockets.emit('updateStateMachineValue', {
+            currentPlayer:stateMachine.currentPlayer
+        });
     });
 
     // When player has placed a master, update stateMachine
@@ -251,7 +270,7 @@ io.sockets.on('connection', function (socket) {
         }
         if(staticGameData.gameMode == 'singleplayer') {
             if(data.player == stateMachine.local_player) {
-                socket.emit('showMessage', {message: 'You have placed ' + total + ' of the 7 masters.'});
+                socket.send('You have placed ' + total + ' of the 7 masters.');
             }
             nextSingleplayer();
         } else {
@@ -269,16 +288,16 @@ io.sockets.on('connection', function (socket) {
 
     // Decide which player is the next player (for singeplayer)
     function nextSingleplayer() {
-        if(stateMachine['current_player'] == staticGameData.playerOrder[staticGameData.playerOrder.length-1]) {
+        if(stateMachine['currentPlayer'] == staticGameData.playerOrder[staticGameData.playerOrder.length-1]) {
             stateMachine['current_round'] += 1;
-            stateMachine['current_player'] = staticGameData.playerOrder[0];
-            console.log('Current player is ' + stateMachine['current_player'] + ' and we are now in round ' + stateMachine['current_round']);
+            stateMachine['currentPlayer'] = staticGameData.playerOrder[0];
+            console.log('Current player is ' + stateMachine['currentPlayer'] + ' and we are now in round ' + stateMachine['current_round']);
         } else {
-            stateMachine['current_player'] = staticGameData.playerOrder[staticGameData.playerOrder.indexOf(stateMachine['current_player'])+1];
-            console.log('Current player is ' + stateMachine['current_player'] + ' and we are in round ' + stateMachine['current_round']);
+            stateMachine['currentPlayer'] = staticGameData.playerOrder[staticGameData.playerOrder.indexOf(stateMachine['currentPlayer'])+1];
+            console.log('Current player is ' + stateMachine['currentPlayer'] + ' and we are in round ' + stateMachine['current_round']);
         }
-        var localTurn = (stateMachine['current_player'] == stateMachine['local_player']);
-        socket.emit('passTurn', {current_player: stateMachine['current_player'], localTurn: localTurn, current_round:stateMachine['current_round']});
+        var localTurn = (stateMachine['currentPlayer'] == stateMachine['local_player']);
+        socket.emit('passTurn', {currentPlayer: stateMachine['currentPlayer'], localTurn: localTurn, current_round:stateMachine['current_round']});
 
         if(stateMachine['current_round'] == staticGameData.guilds.length) {
             // @TODO set stateMachine data needed for normal play - is there any needed?
@@ -339,11 +358,11 @@ io.sockets.on('connection', function (socket) {
                             amount = stateMachine['villages'][village][player][guild];
                             if(village.substr(village.indexOf('_')+1) == village_id) {
                                 sum += amount;
-                                if(player == stateMachine.current_player) {
+                                if(player == stateMachine.currentPlayer) {
                                     sumForPlayer += amount;
                                 }
                             }
-                            if(player == stateMachine.current_player && guild == guildName.substr(0,1) && amount != 0) {
+                            if(player == stateMachine.currentPlayer && guild == guildName.substr(0,1) && amount != 0) {
                                 sumGuildForPlayer += amount;
                                 console.log('Trying to place a guild that has already been placed!');
                             }
@@ -358,9 +377,9 @@ io.sockets.on('connection', function (socket) {
                 }
             } while(!canPlaceTile);
 
-            console.log(stateMachine.current_player + ' places a ' + guildName + ' master on village ' + village_id);
+            console.log(stateMachine.currentPlayer + ' places a ' + guildName + ' master on village ' + village_id);
             var data = {
-                player: stateMachine.current_player,
+                player: stateMachine.currentPlayer,
                 guild_id: guild_id,
                 guildName: guildName,
                 village_id: village_id

@@ -11,6 +11,8 @@ function Shangrila() {
 
 /* Starts game engine & shows 'Choose color' screen */
 Shangrila.prototype.splashScreen = function() {
+    shangrila.inLobby = false;
+    shangrila.inSpash = true;
     if(splashContainer = stage.getChildByName('splashContainer')) {
         stage.removeChild(splashContainer); // remove splash page from stage
     }
@@ -87,6 +89,7 @@ Shangrila.prototype.splashScreen = function() {
 /* This draws up the lobby and shows which player are waiting, who is the game initiator, etc */
 Shangrila.prototype.lobby = function() {
     shangrila.inLobby = true;
+    shangrila.inSplash = false;
     if(splashContainer = stage.getChildByName('splashContainer')) {
         stage.removeChild(splashContainer); // remove splash page from stage
     }
@@ -184,13 +187,14 @@ Shangrila.prototype.lobby = function() {
         lobbyContainer.addChild(waitingToStartNotice);
     }
 
-    // initNewGame(local_player)
     lobbyContainer.name = 'lobbyContainer';
     stage.addChild(lobbyContainer);
 };
 
 /* Initializes new game board. Used when game initiator starts the game */
 Shangrila.prototype.initNewGame = function() {
+    shangrila.inSplash = false;
+    shangrila.inLobby = false;
     this.setupRound = true;
 
     if(lobbyContainer = stage.getChildByName('lobbyContainer')) {
@@ -210,16 +214,31 @@ Shangrila.prototype.initNewGame = function() {
     /* Draw background control deck */
     var graphicsControldeck = new createjs.Graphics().beginFill(this.colors[shangrila.local_player]['controldeckBackground']).rect(this.gameboardWidth, 0, this.controldeckWidth, stage.canvas.height);
     var backgroundControldeck = new createjs.Shape(graphicsControldeck);
+    backgroundControldeck.setBounds(this.gameboardWidth, 0, this.controldeckWidth, stage.canvas.height);
+    backgroundControldeck.name = 'backgroundControldeck';
     stage.addChild(backgroundControldeck);
 
     this.drawBridges();
     this.drawVillages();
     this.drawGuildShields();
 
-    shangrila.showMessage('Welcome player ' + local_player + '!');
-    shangrila.showMessage('Please place one of your guilds in a village (with a maximum of 3 per village).', 5000);
+    shangrila.showMessage('Welcome player ' + shangrila.local_player + '!');
+    //shangrila.showMessage('Please place one of your guilds in a village (with a maximum of 3 per village).', 5000);
+};
 
-}
+/* Update the current player indicator */
+Shangrila.prototype.updateCurrentPlayer = function() {
+    if(shangrila.local_player == shangrila.currentPlayer) {
+        var turnIndicatorText = 'your turn';
+    } else {
+        var turnIndicatorText = shangrila.currentPlayer + '\'s turn';
+    }
+    var turnIndicator = new createjs.Text(turnIndicatorText, '30px Arial','black');
+    var backgroundControldeck = stage.getChildByName('backgroundControldeck');
+    turnIndicator.x = stage.canvas.width * 0.85;
+    turnIndicator.y = stage.canvas.height * 0.9;
+    stage.addChild(turnIndicator);
+};
 
 /* Draws the sidebar of the game board when in-game */
 Shangrila.prototype.drawMenu = function() {

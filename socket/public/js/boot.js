@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function(){
     initialHeight = window.innerHeight;
 
     /* Create socket */
-    socket = io.connect('http://localhost');
+    socket = io.connect(document.location.origin);
 
     // Client functions
     socket.on('removeBridge', function (data) {
@@ -30,6 +30,10 @@ document.addEventListener('DOMContentLoaded', function(){
 
     socket.on('showMessage', function (data) {
         shangrila.showMessage(data.message);
+    });
+
+    socket.on('message', function(message) {
+        shangrila.showMessage(message);
     });
 
     socket.on('placeMaster', function (data) {
@@ -46,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function(){
     });
 
     socket.on('passTurn', function(data) {
-        shangrila.current_player = data.current_player;
+        shangrila.currentPlayer = data.currentPlayer;
         if(data.humanTurn) {
             if(stage.getChildByName('loadingScreen')) {
                 stage.removeChild(stage.getChildByName('loadingScreen'));
@@ -89,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function(){
             }
             stage.enableMouseOver(0);
 
-            shangrila.showMessage('It is ' + data.current_player + '\'s turn!');
+            shangrila.showMessage('It is ' + data.currentPlayer + '\'s turn!');
         }
     });
 
@@ -151,6 +155,9 @@ function initGame() {
         for(var index in data) {
             shangrila[index] = data[index];
             console.log('State machine in var shangrila.' + index + ' is set to ' + data[index]);
+            if(index == 'currentPlayer') {
+                shangrila.updateCurrentPlayer();
+            }
         }
     });
 }
