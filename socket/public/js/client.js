@@ -9,6 +9,63 @@ function Shangrila() {
     stage.update();
 }
 
+/* Set up speech recognition */
+Shangrila.prototype.setupSpeechRecognition = function() {
+    /*// Create  the webkitSpeechRecognition object which provides the speech interface
+    var rec = new webkitSpeechRecognition();
+    // Ensure that the recogniser is listening continously, even if the user pauses (default value is false)
+    rec.continuous = true;
+    rec.lang = 'en';
+    // Start recognising
+    rec.start();
+
+    rec.onresult = function(e) {
+        if(typeof e.results!="undefined") {
+            for (var i = e.resultIndex; i < e.results.length; ++i) {
+                console.log(e.results[i]);
+                if (e.results[i].isFinal) {
+                    string = e.results[i][0].transcript;
+                    console.log(string);
+                    if(string == 'start game') {
+                        socket.emit('initNewGame');
+                    } else if(string == 'blue' || string == 'red' || string == 'yellow' || string == 'pink') {
+                        shangrila.local_player = string;
+                        shangrila.inSplash = false;
+                        shangrila.inLobby = true;
+                        socket.emit('choseColor', {local_player: shangrila.local_player});
+                        shangrila.showMessage('Welcome to the lobby, player ' + shangrila.local_player);
+                    }
+                }
+            }
+        }
+    };*/
+    if (annyang) {
+        // Let's define our first command. First the text we expect, and then the function it should call
+        var commands = {
+            'i want to play with :color': function(color) {
+                if(color == 'blue' || color == 'red' || color == 'pink' || color == 'yellow') {
+                    shangrila.local_player = color;
+                    shangrila.inSplash = false;
+                    shangrila.inLobby = true;
+                    socket.emit('choseColor', {local_player: shangrila.local_player});
+                    shangrila.showMessage('Welcome to the lobby, player ' + shangrila.local_player);
+                } else {
+                    shangrila.showMessage('The color ' + color + ' does not exist');
+                }
+            },
+            'please start the game': function () {
+                socket.emit('initNewGame');
+            }
+        };
+
+        // Add our commands to annyang
+        annyang.addCommands(commands);
+
+        // Start listening. You can call this here, or attach this call to an event, button, etc.
+        annyang.start();
+    }
+};
+
 /* Starts game engine & shows 'Choose color' screen */
 Shangrila.prototype.splashScreen = function() {
     shangrila.inLobby = false;

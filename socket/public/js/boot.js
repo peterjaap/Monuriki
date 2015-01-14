@@ -140,6 +140,9 @@ function initGame() {
         stateMachine = data.stateMachine;
         shangrila.activePlayers = stateMachine.activePlayers;
         shangrila.playerOrder = stateMachine.playerOrder;
+
+        /* Set up speech recognition */
+        shangrila.setupSpeechRecognition();
     });
 
     socket.on('showSplashScreen', function(show) {
