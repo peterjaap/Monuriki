@@ -11,34 +11,6 @@ function Shangrila() {
 
 /* Set up speech recognition */
 Shangrila.prototype.setupSpeechRecognition = function() {
-    /*// Create  the webkitSpeechRecognition object which provides the speech interface
-    var rec = new webkitSpeechRecognition();
-    // Ensure that the recogniser is listening continously, even if the user pauses (default value is false)
-    rec.continuous = true;
-    rec.lang = 'en';
-    // Start recognising
-    rec.start();
-
-    rec.onresult = function(e) {
-        if(typeof e.results!="undefined") {
-            for (var i = e.resultIndex; i < e.results.length; ++i) {
-                console.log(e.results[i]);
-                if (e.results[i].isFinal) {
-                    string = e.results[i][0].transcript;
-                    console.log(string);
-                    if(string == 'start game') {
-                        socket.emit('initNewGame');
-                    } else if(string == 'blue' || string == 'red' || string == 'yellow' || string == 'pink') {
-                        shangrila.local_player = string;
-                        shangrila.inSplash = false;
-                        shangrila.inLobby = true;
-                        socket.emit('choseColor', {local_player: shangrila.local_player});
-                        shangrila.showMessage('Welcome to the lobby, player ' + shangrila.local_player);
-                    }
-                }
-            }
-        }
-    };*/
     if (annyang) {
         // Let's define our first command. First the text we expect, and then the function it should call
         var commands = {
@@ -60,6 +32,23 @@ Shangrila.prototype.setupSpeechRecognition = function() {
 
         // Add our commands to annyang
         annyang.addCommands(commands);
+
+        annyang.addCallback('start', function () {
+            mic_status = stage.getChildByName('mic_status');
+            lobbyContainer = stage.getChildByName('lobbyContainer');
+            if(mic_status) {
+                var mic = new createjs.Bitmap(queue.getResult('mic_green'));
+                mic.name = mic_status.name;
+                mic.scaleX = mic_status.scaleX;
+                mic.scaleY = mic_status.scaleY;
+                mic.width = mic_status.width;
+                mic.height = mic_status.height;
+                mic.x = mic_status.x;
+                mic.y = mic_status.y;
+                stage.addChild(mic);
+                stage.removeChild(mic_status);
+            }
+        });
 
         // Start listening. You can call this here, or attach this call to an event, button, etc.
         annyang.start();
@@ -140,6 +129,23 @@ Shangrila.prototype.splashScreen = function() {
     }
 
     splashContainer.name = 'splashContainer';
+
+    /* Add mic image to stage */
+    var mic = new createjs.Bitmap('images/mic_red.png');
+    bounds = mic.getBounds();
+    mic.scaleX = 1;
+    mic.name = 'mic_status';
+    mic.scaleY = 1;
+    mic.width = 48;
+    mic.height = 48;
+    mic.x = stage.canvas.width - mic.width*1.2;
+    mic.y = stage.canvas.height * 0;
+    console.log(mic);
+    mic.addEventListener('click', function(event) {
+        shangrila.setupSpeechRecognition();
+    });
+    stage.addChild(mic);
+
     stage.addChild(splashContainer);
 };
 
@@ -152,6 +158,9 @@ Shangrila.prototype.lobby = function() {
     }
     if(lobbyContainer = stage.getChildByName('lobbyContainer')) {
         stage.removeChild(lobbyContainer); // remove splash page from stage
+    }
+    if(micStatus = stage.getChildByName('mic_status')) {
+        stage.removeChild(micStatus);
     }
 
     var lobbyContainer = new createjs.Container();
@@ -285,6 +294,9 @@ Shangrila.prototype.initNewGame = function() {
 
 /* Update the current player indicator */
 Shangrila.prototype.updateCurrentPlayer = function() {
+    if(turnIndicator = stage.getChildByName('turnIndicator')) {
+        stage.removeChild(turnIndicator);
+    }
     if(shangrila.local_player == shangrila.currentPlayer) {
         var turnIndicatorText = 'your turn';
     } else {
@@ -293,6 +305,7 @@ Shangrila.prototype.updateCurrentPlayer = function() {
     var turnIndicator = new createjs.Text(turnIndicatorText, '30px Arial','black');
     var backgroundControldeck = stage.getChildByName('backgroundControldeck');
     turnIndicator.x = stage.canvas.width * 0.85;
+    turnIndicator.name = 'turnIndicator';
     turnIndicator.y = stage.canvas.height * 0.9;
     stage.addChild(turnIndicator);
 };
@@ -659,7 +672,7 @@ Shangrila.prototype.drawGuildShields = function() {
             stage.addChild(initial);
         }
     }
-}
+};
 
 /* Draws the master on the chosen city for a certain player */
 Shangrila.prototype.placeMaster = function(data, event) {
@@ -667,21 +680,48 @@ Shangrila.prototype.placeMaster = function(data, event) {
     var guildShapeSmall = stage.getChildByName('guild_shape_small_' + data.guild_id + '_' + data.village_id);
     var amount = stage.getChildByName('guild_amount_' + data.player + '_' + data.guildName.substr(0,1));
 
-    if(data.player == shangrila.local_player) {
-        if(shangrila.setupRound && amount.amount == 6) {
-            totalMasterTiles = 0;
-            for(var key in village.masterTiles) {
-                totalMasterTiles += village.masterTiles[key];
-            }
-            if(totalMasterTiles >= 3) {
-                shangrila.showMessage('Sorry, there are already 3 masters in this village.');
-            } else if(village.masterTiles[data.player] >= 2) {
-                shangrila.showMessage('Sorry, you already have 2 masters in this village.');
-            } else {
-                if(typeof event != "undefined") {
-                    event.target.removeAllEventListeners();
+    if(shangrila.gameMode == 'singleplayer') {
+        if (data.player == shangrila.local_player) {
+            if (shangrila.setupRound && amount.amount == 6) {
+                totalMasterTiles = 0;
+                for (var key in village.masterTiles) {
+                    totalMasterTiles += village.masterTiles[key];
                 }
+                if (totalMasterTiles >= 3) {
+                    shangrila.showMessage('Sorry, there are already 3 masters in this village.');
+                } else if (village.masterTiles[data.player] >= 2) {
+                    shangrila.showMessage('Sorry, you already have 2 masters in this village.');
+                } else {
+                    if (typeof event != "undefined") {
+                        event.target.removeAllEventListeners();
+                    }
 
+                    guildShapeSmall.graphics.beginFill(data.player).rect(
+                        guildShapeSmall.getBounds().x,
+                        guildShapeSmall.getBounds().y,
+                        guildShapeSmall.getBounds().width,
+                        guildShapeSmall.getBounds().height
+                    ).endFill();
+
+                    village.masterTiles[data.player] += 1;
+                    shangrila.showMessage('You have placed a ' + data.guildName + ' master in village ' + data.village_id);
+                    amount.amount = amount.amount - 1;
+                    amount.text = amount.amount;
+                    socket.emit('placeMaster', {
+                        village_id: data.village_id,
+                        guild_id: data.guild_id,
+                        guildName: data.guildName,
+                        player: data.player
+                    });
+                }
+            } else if (shangrila.setupRound && amount.amount < 6) {
+                shangrila.showMessage('Sorry, you have already placed a ' + data.guildName + ' master in a village. This is not allowed in the first round.');
+            } else if (!shangrila.setupRound) {
+                // normal game
+                alert('Normal game! What to do?');
+            }
+        } else {
+            if (shangrila.setupRound) {
                 guildShapeSmall.graphics.beginFill(data.player).rect(
                     guildShapeSmall.getBounds().x,
                     guildShapeSmall.getBounds().y,
@@ -689,70 +729,127 @@ Shangrila.prototype.placeMaster = function(data, event) {
                     guildShapeSmall.getBounds().height
                 ).endFill();
 
+                guildShapeSmall.removeAllEventListeners();
+
                 village.masterTiles[data.player] += 1;
-                shangrila.showMessage('You have placed a ' + data.guildName + ' master in village ' + data.village_id);
+                shangrila.showMessage(data.player + ' has placed a ' + data.guildName + ' master in village ' + data.village_id);
                 amount.amount = amount.amount - 1;
                 amount.text = amount.amount;
-                socket.emit('placeMaster', {'village_id':data.village_id, guildName:data.guildName, player: data.player});
+            } else if (!shangrila.setupRound) {
+                // normal game
+                alert('Normal game! What to do?');
             }
-        } else if(shangrila.setupRound && amount.amount < 6) {
-            shangrila.showMessage('Sorry, you have already placed a ' + data.guildName + ' master in a village. This is not allowed in the first round.');
-        } else if(!shangrila.setupRound) {
-            // normal game
-            alert('Normal game! What to do?');
         }
-    } else {
-        if(shangrila.setupRound) {
-            guildShapeSmall.graphics.beginFill(data.player).rect(
-                guildShapeSmall.getBounds().x,
-                guildShapeSmall.getBounds().y,
-                guildShapeSmall.getBounds().width,
-                guildShapeSmall.getBounds().height
-            ).endFill();
+    } else if(shangrila.gameMode == 'multiplayer') {
+        if(data.player == shangrila.currentPlayer) {
+            if (shangrila.setupRound && amount.amount == 6) {
+                totalMasterTiles = 0;
+                for (var key in village.masterTiles) {
+                    totalMasterTiles += village.masterTiles[key];
+                }
+                if (totalMasterTiles >= 3) {
+                    shangrila.showMessage('Sorry, there are already 3 masters in this village.');
+                } else if (village.masterTiles[data.player] >= 2) {
+                    shangrila.showMessage('Sorry, you already have 2 masters in this village.');
+                } else {
+                    if (typeof event != "undefined") {
+                        event.target.removeAllEventListeners();
+                    }
 
-            guildShapeSmall.removeAllEventListeners();
+                    guildShapeSmall.graphics.beginFill(data.player).rect(
+                        guildShapeSmall.getBounds().x,
+                        guildShapeSmall.getBounds().y,
+                        guildShapeSmall.getBounds().width,
+                        guildShapeSmall.getBounds().height
+                    ).endFill();
 
-            village.masterTiles[data.player] += 1;
-            shangrila.showMessage(data.player + ' has placed a ' + data.guildName + ' master in village ' + data.village_id);
-            amount.amount = amount.amount - 1;
-            amount.text = amount.amount;
-        } else if(!shangrila.setupRound) {
-            // normal game
-            alert('Normal game! What to do?');
+                    village.masterTiles[data.player] += 1;
+                    shangrila.showMessage('You have placed a ' + data.guildName + ' master in village ' + data.village_id);
+                    amount.amount = amount.amount - 1;
+                    amount.text = amount.amount;
+                    socket.emit('placeMaster', {
+                        'village_id': data.village_id,
+                        guild_id: data.guild_id,
+                        guildName: data.guildName,
+                        player: data.player
+                    });
+                }
+            } else if (shangrila.setupRound && amount.amount < 6) {
+                shangrila.showMessage('Sorry, you have already placed a ' + data.guildName + ' master in a village. This is not allowed in the first round.');
+            } else if (!shangrila.setupRound) {
+                // normal game
+                alert('Normal game! What to do?');
+            }
+        } else {
+            shangrila.showMessage('It is not your turn! It is ' + shangrila.currentPlayer + '\'s turn!');
         }
     }
-}
+};
+
+Shangrila.prototype.updateGuildShield = function(data) {
+    console.log(data);
+    var village = stage.getChildByName('village_' + data.village_id);
+    var guildShapeSmall = stage.getChildByName('guild_shape_small_' + data.guild_id + '_' + data.village_id);
+    var amount = stage.getChildByName('guild_amount_' + data.player + '_' + data.guildName.substr(0,1));
+
+    if (shangrila.setupRound) {
+        guildShapeSmall.graphics.beginFill(data.player).rect(
+            guildShapeSmall.getBounds().x,
+            guildShapeSmall.getBounds().y,
+            guildShapeSmall.getBounds().width,
+            guildShapeSmall.getBounds().height
+        ).endFill();
+
+        guildShapeSmall.removeAllEventListeners();
+
+        village.masterTiles[data.player] += 1;
+        shangrila.showMessage(data.player + ' has placed a ' + data.guildName + ' master in village ' + data.village_id);
+        amount.amount = amount.amount - 1;
+        amount.text = amount.amount;
+    } else if (!shangrila.setupRound) {
+        // normal game
+        alert('Normal game! What to do?');
+    }
+};
 
 /* Show a message that is pushed from app.js */
 Shangrila.prototype.showMessage = function(messageText, duration) {
-    if(typeof duration == 'undefined') duration = 2000;
+    if(typeof messageText == 'string') {
+        console.log(messageText);
+        if (typeof duration == 'undefined') duration = 2000;
 
-    this.messageHistory.push({timestamp: +new Date, message: messageText});
+        this.messageHistory.push({timestamp: +new Date, message: messageText});
 
-    this.numberOfActiveMessages += 1;
+        this.numberOfActiveMessages += 1;
 
-    height = stage.canvas.height * 0.04;
-    var messageGraphic = new createjs.Graphics().beginFill('black').rect(
-        stage.canvas.width * 0.25,
-        0,
-        stage.canvas.width * 0.5,
-        height
-    );
-    var messageShape = new createjs.Shape(messageGraphic);
-    messageShape.y = height * -1;
-    stage.addChild(messageShape);
+        height = stage.canvas.height * 0.04;
+        var messageGraphic = new createjs.Graphics().beginFill('black').rect(
+            stage.canvas.width * 0.25,
+            0,
+            stage.canvas.width * 0.5,
+            height
+        );
+        var messageShape = new createjs.Shape(messageGraphic);
+        messageShape.y = height * -1;
+        stage.addChild(messageShape);
 
-    var toPosition = ((this.numberOfActiveMessages-1) * height) + 0;
-    var toPositionMessage = ((this.numberOfActiveMessages-1) * height) + 5;
+        var toPosition = ((this.numberOfActiveMessages - 1) * height) + 0;
+        var toPositionMessage = ((this.numberOfActiveMessages - 1) * height) + 5;
 
-    createjs.Tween.get(messageShape).to({y:toPosition}, 500).wait(duration).to({y:height*-1}, 1000).call(function (event) {stage.removeChild(event.target);});
+        createjs.Tween.get(messageShape).to({y: toPosition}, 500).wait(duration).to({y: height * -1}, 1000).call(function (event) {
+            stage.removeChild(event.target);
+        });
 
-    var message = new createjs.Text(messageText, '12px Arial','white');
-    bounds = message.getBounds();
-    message.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
-    message.y = height * -1;
-    createjs.Tween.get(message).to({y:toPositionMessage}, 500).wait(duration).to({y:height*-1}, 1000).call(function (event) {stage.removeChild(event.target); shangrila.numberOfActiveMessages -= 1; });
+        var message = new createjs.Text(messageText, '12px Arial', 'white');
+        bounds = message.getBounds();
+        message.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
+        message.y = height * -1;
+        createjs.Tween.get(message).to({y: toPositionMessage}, 500).wait(duration).to({y: height * -1}, 1000).call(function (event) {
+            stage.removeChild(event.target);
+            shangrila.numberOfActiveMessages -= 1;
+        });
 
-    stage.addChild(message);
+        stage.addChild(message);
+    }
 
 }

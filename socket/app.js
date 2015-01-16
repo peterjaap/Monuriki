@@ -165,8 +165,6 @@ function logSM() {
     util.log(util.inspect(stateMachine,{showHidden:false,depth:10}));
 }
 
-logSM();
-
 // Listen for server side events
 io.sockets.on('connection', function (socket) {
     // Send message new player has connected
@@ -177,9 +175,6 @@ io.sockets.on('connection', function (socket) {
         staticGameData:staticGameData,
         stateMachine:stateMachine
     });
-
-    // Show splash screen to start the game
-    socket.emit('showSplashScreen', true);
 
     // Asynchronous functions
     // Set action what to do when player disconnects
@@ -272,14 +267,33 @@ io.sockets.on('connection', function (socket) {
             if(data.player == stateMachine.local_player) {
                 socket.send('You have placed ' + total + ' of the 7 masters.');
             }
-            nextSingleplayer();
+            return nextSingleplayer();
         } else {
-            nextMultiplayer();
+            console.log('Updating guild shields for all clients');
+            io.sockets.emit('_updateGuildShield', data);
+            return nextMultiplayer();
         }
     }
 
     function nextMultiplayer() {
-        // not yet
+        // Define who is next
+        index = stateMachine.playerOrder.indexOf(stateMachine.currentPlayer);
+        if(typeof index != 'undefined') {
+            if(typeof stateMachine.playerOrder[index+1] != 'undefined') {
+                nextPlayer = stateMachine.playerOrder[index + 1];
+            } else {
+                nextPlayer = stateMachine.playerOrder[0];
+            }
+            // Update the state machine and the turn indicator
+            stateMachine.currentPlayer = nextPlayer;
+            io.sockets.emit('updateStateMachineValue', {
+                currentPlayer:stateMachine.currentPlayer
+            });
+            // Let every player know who's turn it is
+            io.sockets.send('It is player ' + stateMachine.currentPlayer + '\'s turn');
+            return true;
+        }
+
     }
 
 
@@ -384,7 +398,7 @@ io.sockets.on('connection', function (socket) {
                 guildName: guildName,
                 village_id: village_id
             };
-            socket.emit('placeMaster', data);
+            socket.emit('_placeMaster', data);
             placeMaster(data);
         }
     }

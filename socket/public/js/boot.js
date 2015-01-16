@@ -23,23 +23,6 @@ document.addEventListener('DOMContentLoaded', function(){
     /* Create socket */
     socket = io.connect(document.location.origin);
 
-    // Client functions
-    socket.on('removeBridge', function (data) {
-        shangrila.removeBridge(data);
-    });
-
-    socket.on('showMessage', function (data) {
-        shangrila.showMessage(data.message);
-    });
-
-    socket.on('message', function(message) {
-        shangrila.showMessage(message);
-    });
-
-    socket.on('placeMaster', function (data) {
-        shangrila.placeMaster(data);
-    });
-
     socket.on('activePlayersUpdate', function(data) {
         shangrila.activePlayers = data;
         if(shangrila.inLobby) {
@@ -104,9 +87,18 @@ document.addEventListener('DOMContentLoaded', function(){
     /* Todo; add loading screen */
 
     queue = new createjs.LoadQueue(false);
-    queue.installPlugin(createjs.Sound);
-    //queue.addEventListener('complete', initGame);
-    queue.loadManifest([{id:'village',src:'images/fortress.png'},{id:'loader', src:'images/loader.gif'}]);
+    //queue.installPlugin(createjs.Sound);
+    queue.loadManifest(
+        [
+            {id:'village',src:'images/fortress.png'},
+            {id:'loader', src:'images/loader.gif'},
+            {id:'mic_red', src:'images/mic_red.png'},
+            {id:'mic_green', src:'images/mic_green.png'},
+            {id:'sound_on', src:'images/sound_on.png'},
+            {id:'sound_off', src:'images/sound_off.png'}
+        ]
+    );
+    //queue.on("complete", initGame);
     initGame();
 });
 
@@ -135,14 +127,26 @@ function initGame() {
         shangrila.colors = staticGameData.colors;
         shangrila.numberOfActiveMessages = staticGameData.numberOfActiveMessages;
         shangrila.messageHistory = staticGameData.messageHistory;
+        shangrila.gameMode = staticGameData.gameMode;
 
         // Fill state machine data
         stateMachine = data.stateMachine;
         shangrila.activePlayers = stateMachine.activePlayers;
         shangrila.playerOrder = stateMachine.playerOrder;
+    });
 
-        /* Set up speech recognition */
-        shangrila.setupSpeechRecognition();
+    // Client functions
+    socket.on('_removeBridge', function (data) {
+        shangrila.removeBridge(data);
+    });
+    socket.on('_showMessage', function (data) {
+        shangrila.showMessage(data);
+    });
+    socket.on('_placeMaster', function (data) {
+        shangrila.placeMaster(data);
+    });
+    socket.on('_updateGuildShield', function (data) {
+        shangrila.updateGuildShield(data);
     });
 
     socket.on('showSplashScreen', function(show) {
@@ -162,6 +166,10 @@ function initGame() {
                 shangrila.updateCurrentPlayer();
             }
         }
+    });
+
+    socket.on('message', function(data) {
+       shangrila.showMessage(data);
     });
 }
 
