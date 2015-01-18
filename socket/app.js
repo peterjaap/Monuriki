@@ -2,7 +2,7 @@
    updates to the various clients
 
    TODO:
-   - apply consistency in how to identify players; through their client ID or their color?
+   - apply consistency in how to identify players; through their client ID or their color? activePlayers vs activePlayersColors
  * */
 
 var fs = require('fs');
@@ -148,6 +148,11 @@ stateMachine['current_round'] = null; // keep track of which round we are in
 stateMachine['currentPlayer'] = null; // keep track of which player is currently playing
 stateMachine['local_player'] = null;
 stateMachine['activePlayers'] = {};
+stateMachine['activePlayersColors'] = [];
+stateMachine['activePlayersColors']['blue'] = null;
+stateMachine['activePlayersColors']['red'] = null;
+stateMachine['activePlayersColors']['yellow'] = null;
+stateMachine['activePlayersColors']['violet'] = null;
 stateMachine['playerOrder'] = ['blue','red','yellow','violet']; // for singleplayer
 stateMachine['playerOrder'] = stateMachine['playerOrder'].shuffle(); // random order through shuffling
 for(i=0;i<staticGameData.villages.length;i++) {
@@ -182,6 +187,7 @@ io.sockets.on('connection', function (socket) {
         util.log("Player has disconnected: "+this.id);
         if(stateMachine.activePlayers.hasOwnProperty(this.id)) {
             colorName = stateMachine.activePlayers[this.id];
+            stateMachine.activePlayersColors[colorName] = null;
             // If the game initiator leaves the game, select a random new game initiator
             if(stateMachine.gameInitiator == colorName) {
                 stateMachine.gameInitiator = stateMachine.activePlayers.random();
@@ -215,6 +221,7 @@ io.sockets.on('connection', function (socket) {
         } else {
             // Set current client id as with color key in activePlayers list
             stateMachine.activePlayers[socket.id] = data.local_player;
+            stateMachine.activePlayersColors[data.local_player] = socket.id;
             console.log('Client ' + socket.id + ' is ' + data.local_player + ' and we are in round ' + stateMachine.current_round);
             if(stateMachine.activePlayers.size() == 1) {
                 stateMachine.gameInitiator = data.local_player;
