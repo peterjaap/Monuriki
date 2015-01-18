@@ -199,6 +199,10 @@ io.sockets.on('connection', function (socket) {
         io.sockets.emit('activePlayersUpdate', stateMachine.activePlayers);
     });
 
+    socket.on('__showSplashScreen', function () {
+        socket.emit('_showSplashScreen');
+    });
+
     // When player has chosen a color, update stateMachine
     socket.on('__choseColor', function(data) {
         stateMachine['current_round'] = 0;

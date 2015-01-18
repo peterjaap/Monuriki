@@ -38,9 +38,9 @@ document.addEventListener('DOMContentLoaded', function(){
     /* Load assets & run initGame function when assets are loaded*/
     /* Todo; add loading screen */
 
-    queue = new createjs.LoadQueue(false);
+    loader = new createjs.LoadQueue(false);
     //queue.installPlugin(createjs.Sound);
-    queue.loadManifest(
+    loader.loadManifest(
         [
             {id:'village',src:'images/fortress.png'},
             {id:'loader', src:'images/loader.gif'},
@@ -50,8 +50,12 @@ document.addEventListener('DOMContentLoaded', function(){
             {id:'sound_off', src:'images/sound_off.png'}
         ]
     );
-    //queue.on("complete", initGame);
+
+    /* Initialise stage, socket, preloader, etc */
     initGame();
+
+    /* When loader is finished, show splash screen */
+     loader.on("complete", socket.emit('__showSplashScreen'));
 });
 
 /* Initialize stage, set canvas width & height, retrieve game data and insert them into the game object */
@@ -62,6 +66,13 @@ function initGame() {
 
     stage.canvas.width = window.innerWidth;
     stage.canvas.height = window.innerHeight;
+
+    /* Set preloading text */
+    var title = new createjs.Text('Loading..',(stage.canvas.width * 0.06) + 'px Arial','black');
+    bounds = title.getBounds();
+    title.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
+    title.y = stage.canvas.height * 0.25;
+    stage.addChild(title);
 
     // Set initial game data in session object
     socket.on('_setInitialGameData', function(data) {
@@ -85,26 +96,22 @@ function initGame() {
         stateMachine = data.stateMachine;
         shangrila.activePlayers = stateMachine.activePlayers;
         shangrila.playerOrder = stateMachine.playerOrder;
-
-        shangrila.splashScreen();
     });
 
     // Client functions
     socket.on('_removeBridge', function (data) {
         shangrila.removeBridge(data);
     });
-    socket.on('_showMessage', function (data) {
-        shangrila.showMessage(data);
-    });
+
     socket.on('_placeMaster', function (data) {
         shangrila.placeMaster(data);
     });
+
     socket.on('_updateGuildShield', function (data) {
         shangrila.updateGuildShield(data);
     });
 
-    socket.on('_showSplashScreen', function(show) {
-        // Show splash screen to start the game
+    socket.on('_showSplashScreen', function() {
         shangrila.splashScreen();
     });
 
@@ -120,6 +127,10 @@ function initGame() {
                 shangrila.updateCurrentPlayer();
             }
         }
+    });
+
+    socket.on('_showMessage', function (data) {
+        shangrila.showMessage(data);
     });
 
     socket.on('message', function(data) {
