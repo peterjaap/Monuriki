@@ -3,7 +3,7 @@
  */
 
 var stage = false;
-var queue;
+var loader;
 var shangrila;
 
 var identify = true;
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function(){
     /* Todo; add loading screen */
 
     loader = new createjs.LoadQueue(false);
-    //queue.installPlugin(createjs.Sound);
+    //loader.installPlugin(createjs.Sound); // for sound
     loader.loadManifest(
         [
             {id:'village',src:'images/fortress.png'},

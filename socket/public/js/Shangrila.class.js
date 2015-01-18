@@ -37,7 +37,7 @@ Shangrila.prototype.setupSpeechRecognition = function() {
             mic_status = stage.getChildByName('mic_status');
             lobbyContainer = stage.getChildByName('lobbyContainer');
             if(mic_status) {
-                var mic = new createjs.Bitmap(queue.getResult('mic_green'));
+                var mic = new createjs.Bitmap(loader.getResult('mic_green'));
                 mic.name = mic_status.name;
                 mic.scaleX = mic_status.scaleX;
                 mic.scaleY = mic_status.scaleY;
@@ -388,7 +388,7 @@ Shangrila.prototype.drawVillages = function() {
         var height = stage.canvas.clientHeight * this.villageHeight;
 
         /* Add image to stage */
-        var village = new createjs.Bitmap(queue.getResult('village'));
+        var village = new createjs.Bitmap(loader.getResult('village'));
         village.x = x;
         village.y = y;
         bounds = village.getBounds();
