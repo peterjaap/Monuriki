@@ -112,7 +112,7 @@ function initGame() {
     stage.canvas.height = window.innerHeight;
 
     // Set initial game data in session object
-    socket.on('setInitialGameData', function(data) {
+    socket.on('_setInitialGameData', function(data) {
         // Fill static game data
         staticGameData = data.staticGameData;
         shangrila = new Shangrila();
@@ -133,6 +133,8 @@ function initGame() {
         stateMachine = data.stateMachine;
         shangrila.activePlayers = stateMachine.activePlayers;
         shangrila.playerOrder = stateMachine.playerOrder;
+
+        shangrila.splashScreen();
     });
 
     // Client functions
@@ -149,16 +151,16 @@ function initGame() {
         shangrila.updateGuildShield(data);
     });
 
-    socket.on('showSplashScreen', function(show) {
+    socket.on('_showSplashScreen', function(show) {
         // Show splash screen to start the game
         shangrila.splashScreen();
     });
 
-    socket.on('initNewGame', function (){
+    socket.on('_initNewGame', function (){
         shangrila.initNewGame();
     });
 
-    socket.on('updateStateMachineValue', function(data) {
+    socket.on('_updateStateMachineValue', function(data) {
         for(var index in data) {
             shangrila[index] = data[index];
             console.log('State machine in var shangrila.' + index + ' is set to ' + data[index]);

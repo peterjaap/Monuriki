@@ -171,14 +171,14 @@ io.sockets.on('connection', function (socket) {
     util.log("New player has connected: "+socket.id);
 
     // Send relevant game data to the client
-    socket.emit('setInitialGameData', {
+    socket.emit('_setInitialGameData', {
         staticGameData:staticGameData,
         stateMachine:stateMachine
     });
 
     // Asynchronous functions
     // Set action what to do when player disconnects
-    socket.on("disconnect", function () {
+    socket.on('disconnect', function () {
         util.log("Player has disconnected: "+this.id);
         if(stateMachine.activePlayers.hasOwnProperty(this.id)) {
             colorName = stateMachine.activePlayers[this.id];
@@ -186,7 +186,7 @@ io.sockets.on('connection', function (socket) {
             if(stateMachine.gameInitiator == colorName) {
                 stateMachine.gameInitiator = stateMachine.activePlayers.random();
                 console.log('New game initiator is ' + stateMachine.gameInitiator);
-                io.sockets.emit('updateStateMachineValue', {
+                io.sockets.emit('_updateStateMachineValue', {
                     gameInitiator:stateMachine.gameInitiator
                 });
             }
@@ -200,7 +200,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     // When player has chosen a color, update stateMachine
-    socket.on('choseColor', function(data) {
+    socket.on('__choseColor', function(data) {
         stateMachine['current_round'] = 0;
 
         if(staticGameData.gameMode == 'singleplayer') {
@@ -216,7 +216,7 @@ io.sockets.on('connection', function (socket) {
                 stateMachine.gameInitiator = data.local_player;
             }
             // Update all clients
-            io.sockets.emit('updateStateMachineValue', {
+            io.sockets.emit('_updateStateMachineValue', {
                 gameInitiator:stateMachine.gameInitiator
             });
             console.log('Current players; ');
@@ -226,7 +226,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     // Game initiator has started a new game
-    socket.on('initNewGame', function() {
+    socket.on('__initNewGame', function() {
         // Set player order
         var playerOrder = [];
         for(var playerClientId in stateMachine.activePlayers) {
@@ -238,15 +238,15 @@ io.sockets.on('connection', function (socket) {
         console.log('Player order; ');
         util.log(util.inspect(stateMachine.playerOrder));
         stateMachine.currentPlayer = stateMachine.playerOrder[0];
-        io.sockets.emit('initNewGame');
+        io.sockets.emit('_initNewGame');
         io.sockets.send('It is player ' + stateMachine.currentPlayer + '\'s turn');
-        io.sockets.emit('updateStateMachineValue', {
+        io.sockets.emit('_updateStateMachineValue', {
             currentPlayer:stateMachine.currentPlayer
         });
     });
 
     // When player has placed a master, update stateMachine
-    socket.on('placeMaster', function(data) {
+    socket.on('__placeMaster', function(data) {
         placeMaster(data);
     });
 
@@ -286,7 +286,7 @@ io.sockets.on('connection', function (socket) {
             }
             // Update the state machine and the turn indicator
             stateMachine.currentPlayer = nextPlayer;
-            io.sockets.emit('updateStateMachineValue', {
+            io.sockets.emit('_updateStateMachineValue', {
                 currentPlayer:stateMachine.currentPlayer
             });
             // Let every player know who's turn it is

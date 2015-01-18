@@ -26,7 +26,7 @@ Shangrila.prototype.setupSpeechRecognition = function() {
                 }
             },
             'please start the game': function () {
-                socket.emit('initNewGame');
+                socket.emit('__initNewGame');
             }
         };
 
@@ -120,7 +120,7 @@ Shangrila.prototype.splashScreen = function() {
                 shangrila.local_player = event.target.color;
                 shangrila.inSplash = false;
                 shangrila.inLobby = true;
-                socket.emit('choseColor', {local_player: shangrila.local_player});
+                socket.emit('__choseColor', {local_player: shangrila.local_player});
                 shangrila.showMessage('Welcome to the lobby, player ' + shangrila.local_player);
             });
             // Add button to the stage
@@ -707,7 +707,7 @@ Shangrila.prototype.placeMaster = function(data, event) {
                     shangrila.showMessage('You have placed a ' + data.guildName + ' master in village ' + data.village_id);
                     amount.amount = amount.amount - 1;
                     amount.text = amount.amount;
-                    socket.emit('placeMaster', {
+                    socket.emit('__placeMaster', {
                         village_id: data.village_id,
                         guild_id: data.guild_id,
                         guildName: data.guildName,
@@ -767,7 +767,7 @@ Shangrila.prototype.placeMaster = function(data, event) {
                     shangrila.showMessage('You have placed a ' + data.guildName + ' master in village ' + data.village_id);
                     amount.amount = amount.amount - 1;
                     amount.text = amount.amount;
-                    socket.emit('placeMaster', {
+                    socket.emit('__placeMaster', {
                         'village_id': data.village_id,
                         guild_id: data.guild_id,
                         guildName: data.guildName,
@@ -852,4 +852,4 @@ Shangrila.prototype.showMessage = function(messageText, duration) {
         stage.addChild(message);
     }
 
-}
+};
