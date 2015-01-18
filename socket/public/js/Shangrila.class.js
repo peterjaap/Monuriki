@@ -140,7 +140,6 @@ Shangrila.prototype.splashScreen = function() {
     mic.height = 48;
     mic.x = stage.canvas.width - mic.width*1.2;
     mic.y = stage.canvas.height * 0;
-    console.log(mic);
     mic.addEventListener('click', function(event) {
         shangrila.setupSpeechRecognition();
     });
@@ -197,7 +196,6 @@ Shangrila.prototype.lobby = function() {
         // Add 'me' text for local player
         if(shangrila.local_player == playerColor) {
             var meText = new createjs.Text('Me',(stage.canvas.width * 0.03) + 'px Arial','white');
-            console.log(playerSquareShape.globalToLocal(0,0));
             meText.x = playerSquareShape.getBounds().x + (playerSquareShape.getBounds().width - meText.getBounds().width)/2;
             meText.y = playerSquareShape.getBounds().y + (playerSquareShape.getBounds().height - meText.getBounds().height)/2;
             lobbyContainer.addChild(meText);
@@ -234,7 +232,7 @@ Shangrila.prototype.lobby = function() {
         });
         // Set action to perform when clicked
         startButtonShape.addEventListener('click', function(event) {
-            socket.emit('initNewGame');
+            socket.emit('__initNewGame');
         });
 
         lobbyContainer.addChild(startButtonShape);
@@ -298,9 +296,11 @@ Shangrila.prototype.updateCurrentPlayer = function() {
         stage.removeChild(turnIndicator);
     }
     if(shangrila.local_player == shangrila.currentPlayer) {
-        var turnIndicatorText = 'your turn';
+        turnIndicatorText = 'your turn';
+        shangrila.showMessage('It is your turn');
     } else {
-        var turnIndicatorText = shangrila.currentPlayer + '\'s turn';
+        turnIndicatorText = shangrila.currentPlayer + '\'s turn';
+        shangrila.showMessage('It is player ' + shangrila.currentPlayer + '\'s turn');
     }
     var turnIndicator = new createjs.Text(turnIndicatorText, '30px Arial','black');
     var backgroundControldeck = stage.getChildByName('backgroundControldeck');
@@ -545,6 +545,9 @@ Shangrila.prototype.drawGuildShields = function() {
     var guildHeight = guildWidth;
 
     for(i=0;i<this.guilds.length;i++) {
+        guildName = this.guilds[i];
+
+        /* Draw guild shield on the control deck */
         if(i > noGuildsOnSingleRow) {
             var y = (shangrila.gameboardHeight * 0.05) + (guildHeight * 1.8);
             j = i-noGuildsOnSingleRow+1;
@@ -553,6 +556,9 @@ Shangrila.prototype.drawGuildShields = function() {
             j = i+1;
         }
         var x = shangrila.gameboardWidth + ((guildWidth + padding) * j) - guildWidth / 2;
+
+        /* Draw guilds on the controldeck */
+        /* Set square background for guild shield */
         var guild = new createjs.Graphics().beginFill('black').rect(
             x,
             y,
@@ -568,6 +574,7 @@ Shangrila.prototype.drawGuildShields = function() {
         });
         stage.addChild(guildShape);
 
+        /* Set amount on top of guild shield */
         var guildAmount = new createjs.Graphics().beginFill('grey').rect(
             x,
             y+guildHeight,
@@ -577,40 +584,33 @@ Shangrila.prototype.drawGuildShields = function() {
         var guildAmountShape = new createjs.Shape(guildAmount);
         stage.addChild(guildAmountShape);
 
-        guildName = this.guilds[i];
-
-        /* Draw guilds on the controldeck */
+        /* Set inital (D for Dragonbreather, etc) */
         var initial = new createjs.Text(guildName.substr(0,1),(guildWidth / 2) + 'px Arial','#fff');
         initial.x = x+guildWidth*0.30;
         initial.y = y+guildHeight*0.70;
         initial.textBaseline = 'alphabetic';
         initial.name = 'guild_initial_blue_'  + guildName.substr(0,1);
-
-        for(n=0;n<shangrila.colorNames.length;n++) {
-            var amount = new createjs.Text('AMOUNT',(guildWidth / 3) + 'px Arial','#fff');
-            if(shangrila.colorNames[n] == shangrila.local_player) {
-                amount.x = x+guildWidth*0.4;
-                amount.y = y+guildHeight*1.43;
-            } else {
-                // Outside of screen
-                amount.x = 100000000;
-                amount.y = 100000000;
-            }
-            amount.amount = 6;
-            amount.text = amount.amount;
-            amount.textBaseline = 'alphabetic';
-            amount.name = 'guild_amount_' + shangrila.colorNames[n] + '_' + guildName.substr(0,1);
-            stage.addChild(amount);
-        }
         stage.addChild(initial);
+
+        for (n = 0; n < shangrila.colorNames.length; n++) {
+            if(shangrila.colorNames[n] == shangrila.local_player) {
+                var amount = new createjs.Text('AMOUNT', (guildWidth / 3) + 'px Arial', '#fff');
+                amount.x = x + guildWidth * 0.4;
+                amount.y = y + guildHeight * 1.43;
+                amount.amount = 6;
+                amount.text = amount.amount;
+                amount.textBaseline = 'alphabetic';
+                amount.name = 'guild_amount_' + shangrila.colorNames[n] + '_' + guildName.substr(0, 1);
+                stage.addChild(amount);
+            }
+        }
 
         /* Small guilds for on the villages */
         guildWidthSmall = guildWidth * 0.5;
         guildHeightSmall = guildHeight * 0.5;
         paddingSmall = padding * 0.1;
 
-        //console.log('guildWidth; ' + guildWidth); // 38.28
-
+        /* Draw shields for current guild on all villages */
         for(j=0;j<this.villages.length;j++) {
             villageObject = stage.getChildByName('village_' + j);
 
@@ -680,117 +680,39 @@ Shangrila.prototype.placeMaster = function(data, event) {
     var guildShapeSmall = stage.getChildByName('guild_shape_small_' + data.guild_id + '_' + data.village_id);
     var amount = stage.getChildByName('guild_amount_' + data.player + '_' + data.guildName.substr(0,1));
 
-    if(shangrila.gameMode == 'singleplayer') {
-        if (data.player == shangrila.local_player) {
-            if (shangrila.setupRound && amount.amount == 6) {
-                totalMasterTiles = 0;
-                for (var key in village.masterTiles) {
-                    totalMasterTiles += village.masterTiles[key];
-                }
-                if (totalMasterTiles >= 3) {
-                    shangrila.showMessage('Sorry, there are already 3 masters in this village.');
-                } else if (village.masterTiles[data.player] >= 2) {
-                    shangrila.showMessage('Sorry, you already have 2 masters in this village.');
-                } else {
-                    if (typeof event != "undefined") {
-                        event.target.removeAllEventListeners();
-                    }
-
-                    guildShapeSmall.graphics.beginFill(data.player).rect(
-                        guildShapeSmall.getBounds().x,
-                        guildShapeSmall.getBounds().y,
-                        guildShapeSmall.getBounds().width,
-                        guildShapeSmall.getBounds().height
-                    ).endFill();
-
-                    village.masterTiles[data.player] += 1;
-                    shangrila.showMessage('You have placed a ' + data.guildName + ' master in village ' + data.village_id);
-                    amount.amount = amount.amount - 1;
-                    amount.text = amount.amount;
-                    socket.emit('__placeMaster', {
-                        village_id: data.village_id,
-                        guild_id: data.guild_id,
-                        guildName: data.guildName,
-                        player: data.player
-                    });
-                }
-            } else if (shangrila.setupRound && amount.amount < 6) {
-                shangrila.showMessage('Sorry, you have already placed a ' + data.guildName + ' master in a village. This is not allowed in the first round.');
-            } else if (!shangrila.setupRound) {
-                // normal game
-                alert('Normal game! What to do?');
+    if(data.player == shangrila.currentPlayer) {
+        if (shangrila.setupRound && amount.amount == 6) {
+            totalMasterTiles = 0;
+            for (var key in village.masterTiles) {
+                totalMasterTiles += village.masterTiles[key];
             }
-        } else {
-            if (shangrila.setupRound) {
-                guildShapeSmall.graphics.beginFill(data.player).rect(
-                    guildShapeSmall.getBounds().x,
-                    guildShapeSmall.getBounds().y,
-                    guildShapeSmall.getBounds().width,
-                    guildShapeSmall.getBounds().height
-                ).endFill();
-
-                guildShapeSmall.removeAllEventListeners();
-
-                village.masterTiles[data.player] += 1;
-                shangrila.showMessage(data.player + ' has placed a ' + data.guildName + ' master in village ' + data.village_id);
-                amount.amount = amount.amount - 1;
-                amount.text = amount.amount;
-            } else if (!shangrila.setupRound) {
-                // normal game
-                alert('Normal game! What to do?');
+            if (totalMasterTiles >= 3) {
+                shangrila.showMessage('Sorry, there are already 3 masters in this village.');
+            } else if (village.masterTiles[data.player] >= 2) {
+                shangrila.showMessage('Sorry, you already have 2 masters in this village.');
+            } else {
+                socket.emit('__placeMaster', {
+                    'village_id': data.village_id,
+                    guild_id: data.guild_id,
+                    guildName: data.guildName,
+                    player: data.player
+                });
             }
+        } else if (shangrila.setupRound && amount.amount < 6) {
+            shangrila.showMessage('Sorry, you have already placed a ' + data.guildName + ' master in a village. This is not allowed in the first round.');
+        } else if (!shangrila.setupRound) {
+            // normal game
+            alert('Normal game! What to do?');
         }
-    } else if(shangrila.gameMode == 'multiplayer') {
-        if(data.player == shangrila.currentPlayer) {
-            if (shangrila.setupRound && amount.amount == 6) {
-                totalMasterTiles = 0;
-                for (var key in village.masterTiles) {
-                    totalMasterTiles += village.masterTiles[key];
-                }
-                if (totalMasterTiles >= 3) {
-                    shangrila.showMessage('Sorry, there are already 3 masters in this village.');
-                } else if (village.masterTiles[data.player] >= 2) {
-                    shangrila.showMessage('Sorry, you already have 2 masters in this village.');
-                } else {
-                    if (typeof event != "undefined") {
-                        event.target.removeAllEventListeners();
-                    }
-
-                    guildShapeSmall.graphics.beginFill(data.player).rect(
-                        guildShapeSmall.getBounds().x,
-                        guildShapeSmall.getBounds().y,
-                        guildShapeSmall.getBounds().width,
-                        guildShapeSmall.getBounds().height
-                    ).endFill();
-
-                    village.masterTiles[data.player] += 1;
-                    shangrila.showMessage('You have placed a ' + data.guildName + ' master in village ' + data.village_id);
-                    amount.amount = amount.amount - 1;
-                    amount.text = amount.amount;
-                    socket.emit('__placeMaster', {
-                        'village_id': data.village_id,
-                        guild_id: data.guild_id,
-                        guildName: data.guildName,
-                        player: data.player
-                    });
-                }
-            } else if (shangrila.setupRound && amount.amount < 6) {
-                shangrila.showMessage('Sorry, you have already placed a ' + data.guildName + ' master in a village. This is not allowed in the first round.');
-            } else if (!shangrila.setupRound) {
-                // normal game
-                alert('Normal game! What to do?');
-            }
-        } else {
-            shangrila.showMessage('It is not your turn! It is ' + shangrila.currentPlayer + '\'s turn!');
-        }
+    } else {
+        shangrila.showMessage('It is not your turn! It is ' + shangrila.currentPlayer + '\'s turn!');
     }
 };
 
 Shangrila.prototype.updateGuildShield = function(data) {
-    console.log(data);
     var village = stage.getChildByName('village_' + data.village_id);
     var guildShapeSmall = stage.getChildByName('guild_shape_small_' + data.guild_id + '_' + data.village_id);
-    var amount = stage.getChildByName('guild_amount_' + data.player + '_' + data.guildName.substr(0,1));
+
 
     if (shangrila.setupRound) {
         guildShapeSmall.graphics.beginFill(data.player).rect(
@@ -803,9 +725,18 @@ Shangrila.prototype.updateGuildShield = function(data) {
         guildShapeSmall.removeAllEventListeners();
 
         village.masterTiles[data.player] += 1;
-        shangrila.showMessage(data.player + ' has placed a ' + data.guildName + ' master in village ' + data.village_id);
-        amount.amount = amount.amount - 1;
-        amount.text = amount.amount;
+        if(data.player == shangrila.currentPlayer) {
+            /* Update amount in sidebar */
+            var amount = stage.getChildByName('guild_amount_' + data.player + '_' + data.guildName.substr(0,1));
+            if(typeof amount != 'undefined') {
+                amount.amount = amount.amount - 1;
+                amount.text = amount.amount;
+            }
+            // Show message
+            shangrila.showMessage('You have placed a ' + data.guildName + ' master in village ' + data.village_id);
+        } else {
+            shangrila.showMessage(data.player + ' has placed a ' + data.guildName + ' master in village ' + data.village_id);
+        }
     } else if (!shangrila.setupRound) {
         // normal game
         alert('Normal game! What to do?');

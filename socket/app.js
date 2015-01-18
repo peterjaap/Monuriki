@@ -239,18 +239,13 @@ io.sockets.on('connection', function (socket) {
         util.log(util.inspect(stateMachine.playerOrder));
         stateMachine.currentPlayer = stateMachine.playerOrder[0];
         io.sockets.emit('_initNewGame');
-        io.sockets.send('It is player ' + stateMachine.currentPlayer + '\'s turn');
         io.sockets.emit('_updateStateMachineValue', {
             currentPlayer:stateMachine.currentPlayer
         });
     });
 
-    // When player has placed a master, update stateMachine
+    // When player has placed a master, update stateMachine etc
     socket.on('__placeMaster', function(data) {
-        placeMaster(data);
-    });
-
-    function placeMaster(data) {
         // Update state machine
         stateMachine['villages']['village_' + data.village_id]['player_' + data.player][data.guildName.substr(0,1)] += 1;
         // Calculate end of turn
@@ -263,19 +258,13 @@ io.sockets.on('connection', function (socket) {
                 }
             }
         }
-        if(staticGameData.gameMode == 'singleplayer') {
-            if(data.player == stateMachine.local_player) {
-                socket.send('You have placed ' + total + ' of the 7 masters.');
-            }
-            return nextSingleplayer();
-        } else {
-            console.log('Updating guild shields for all clients');
-            io.sockets.emit('_updateGuildShield', data);
-            return nextMultiplayer();
-        }
-    }
 
-    function nextMultiplayer() {
+        /* Update guild shields on all clients */
+        console.log('Updating guild shields for all clients');
+        io.sockets.emit('_updateGuildShield', data);
+
+        // Calculate whether the setup round is finished (ie; check if all players have 5 of all guilds left)
+
         // Define who is next
         index = stateMachine.playerOrder.indexOf(stateMachine.currentPlayer);
         if(typeof index != 'undefined') {
@@ -289,118 +278,7 @@ io.sockets.on('connection', function (socket) {
             io.sockets.emit('_updateStateMachineValue', {
                 currentPlayer:stateMachine.currentPlayer
             });
-            // Let every player know who's turn it is
-            io.sockets.send('It is player ' + stateMachine.currentPlayer + '\'s turn');
-            return true;
         }
-
-    }
-
-
-
-    // ################# SINGLE PLAYER FUNCTIONS #################
-
-    // Decide which player is the next player (for singeplayer)
-    function nextSingleplayer() {
-        if(stateMachine['currentPlayer'] == staticGameData.playerOrder[staticGameData.playerOrder.length-1]) {
-            stateMachine['current_round'] += 1;
-            stateMachine['currentPlayer'] = staticGameData.playerOrder[0];
-            console.log('Current player is ' + stateMachine['currentPlayer'] + ' and we are now in round ' + stateMachine['current_round']);
-        } else {
-            stateMachine['currentPlayer'] = staticGameData.playerOrder[staticGameData.playerOrder.indexOf(stateMachine['currentPlayer'])+1];
-            console.log('Current player is ' + stateMachine['currentPlayer'] + ' and we are in round ' + stateMachine['current_round']);
-        }
-        var localTurn = (stateMachine['currentPlayer'] == stateMachine['local_player']);
-        socket.emit('passTurn', {currentPlayer: stateMachine['currentPlayer'], localTurn: localTurn, current_round:stateMachine['current_round']});
-
-        if(stateMachine['current_round'] == staticGameData.guilds.length) {
-            // @TODO set stateMachine data needed for normal play - is there any needed?
-        }
-
-        // If the current player is not the local player, do some AI stuff
-        if(!localTurn) {
-            setTimeout(function() {
-                doAITurn();
-            }, 1000); // wait a few seconds for the AI to make its move to simulate a local player
-        }
-    }
-
-    // Pick a random village (for singeplayer)
-    function randomVillage() {
-        return Math.floor(Math.random(0,1)*staticGameData.villages.length);
-    }
-
-    // Pick a random guild (for singeplayer)
-    function randomGuild() {
-        return Math.floor(Math.random(0,1)*staticGameData.guilds.length);
-    }
-
-    // Do an AI turn (for singeplayer)
-    function doAITurn() {
-        var action = 'placeTile';
-
-        if(action == 'placeTile') {
-            canPlaceTile = false;
-            do {
-                if(staticGameData.aiDifficulty == 'easy') {
-                    // Completely random
-                    village_id = randomVillage();
-                    guild_id = randomGuild();
-                } else if(shangrila.aiDifficulty == 'medium') {
-                    //@TODO implement
-                    // give a greater probability for the AI to choose a village with > 0 masters randomly
-                } else if(shangrila.aiDifficulty == 'hard') {
-                    //@TODO implement
-                    // first try to place a master in a village with 2 masters, then with 1
-                    // maybe also try to pick a village that is not connected to a village where the AI already has masters
-                }
-
-                guildName = staticGameData.guilds[guild_id];
-
-                sum = 0;
-                sumForPlayer = 0;
-                sumGuildForPlayer = 0;
-                specificTileAmount = 0;
-
-                // check whether this specific tile is available
-                // check whether the player already has placed this guild somewhere
-                // check whether there are less than 3 masters in this village
-                // check whether the current player has less than 2 masters in this village
-                for(var village in stateMachine['villages']) {
-                    for(var player in stateMachine['villages'][village]) {
-                        for(var guild in stateMachine['villages'][village][player]) {
-                            amount = stateMachine['villages'][village][player][guild];
-                            if(village.substr(village.indexOf('_')+1) == village_id) {
-                                sum += amount;
-                                if(player == stateMachine.currentPlayer) {
-                                    sumForPlayer += amount;
-                                }
-                            }
-                            if(player == stateMachine.currentPlayer && guild == guildName.substr(0,1) && amount != 0) {
-                                sumGuildForPlayer += amount;
-                                console.log('Trying to place a guild that has already been placed!');
-                            }
-                            if(guild == guildName.substr(0,1) && village.substr(village.indexOf('_')+1) == village_id) {
-                                specificTileAmount += amount;
-                            }
-                        }
-                    }
-                }
-                if(sum < 3 && sumForPlayer < 2 && sumGuildForPlayer == 0 && specificTileAmount == 0) {
-                    canPlaceTile = true;
-                }
-            } while(!canPlaceTile);
-
-            console.log(stateMachine.currentPlayer + ' places a ' + guildName + ' master on village ' + village_id);
-            var data = {
-                player: stateMachine.currentPlayer,
-                guild_id: guild_id,
-                guildName: guildName,
-                village_id: village_id
-            };
-            socket.emit('_placeMaster', data);
-            placeMaster(data);
-        }
-    }
+    });
 
 });

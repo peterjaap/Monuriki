@@ -32,54 +32,6 @@ document.addEventListener('DOMContentLoaded', function(){
         }
     });
 
-    socket.on('passTurn', function(data) {
-        shangrila.currentPlayer = data.currentPlayer;
-        if(data.humanTurn) {
-            if(stage.getChildByName('loadingScreen')) {
-                stage.removeChild(stage.getChildByName('loadingScreen'));
-            }
-            stage.enableMouseOver(20);
-
-             if(data.current_round == shangrila.guilds.length) { // we need as much rounds as there are guilds in setup phase
-                 shangrila.setupRound = false;
-
-                 shangrila.drawMenu();
-
-                 shangrila.showMessage('You can now perform 1 of 3 actions; place a master, recruit students or travel.', 6000);
-
-                 /*
-                 @TODO set new onclick actions on the small guilds
-
-                 When clicked on the guild, a popup should appear with three options;
-                 - place a master on this guild
-                    - if it is available
-                 - recruit a student for this guild
-                     - if there already is a master
-                     - if less than 2 students have been placed in this round)
-                 - begin the journey of the students
-                     - choose which city to travel to
-                     - AND BATTLE!!
-                 */
-
-            } else if(data.current_round < 7) {
-                shangrila.showMessage('It is your turn!');
-            } else if(data.current_round > 7) {
-                shangrila.showMessage('It is your turn!');
-            }
-        } else {
-            if(!stage.getChildByName('loadingScreen')) {
-                var waitingScreen = new createjs.Graphics().beginFill('black').rect(0, 0, stage.canvas.width, stage.canvas.height);
-                var waitingScreenShape = new createjs.Shape(waitingScreen);
-                waitingScreenShape.alpha = 0.3;
-                waitingScreenShape.name = 'loadingScreen';
-                stage.addChild(waitingScreenShape);
-            }
-            stage.enableMouseOver(0);
-
-            shangrila.showMessage('It is ' + data.currentPlayer + '\'s turn!');
-        }
-    });
-
     /* Add ticker to update canvas when necessary */
     createjs.Ticker.addEventListener("tick", tick);
 
