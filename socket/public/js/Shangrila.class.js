@@ -458,6 +458,8 @@ Shangrila.prototype.drawBridges = function() {
         var height = stage.canvas.clientHeight * this.villageHeight;
 
         /* Get x and y positions for source and target villages from villages object */
+        console.log(i);
+        console.log(this.bridges[i]);
         from = this.villages[this.bridges[i]['from']];
         to = this.villages[this.bridges[i]['to']];
 

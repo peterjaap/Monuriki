@@ -74,9 +74,10 @@ staticGameData.villages[6] = {top:79, left:28 };
 staticGameData.villages[7] = {top:21, left:59 };
 staticGameData.villages[8] = {top:38, left:56 };
 staticGameData.villages[9] = {top:78, left:74 };
-staticGameData.villages[10] = {top:9, left:73 };
+staticGameData.villages[10] = {top:57, left:70 };
 staticGameData.villages[11] = {top:40, left:77 };
-staticGameData.villages[12] = {top:57, left:70 };
+staticGameData.villages[12] = {top:9, left:73 };
+
 staticGameData.villageWidth = 0.12;
 staticGameData.villageHeight = 0.12;
 
@@ -93,20 +94,20 @@ staticGameData.bridges[5] = {from:4, to:1};
 staticGameData.bridges[6] = {from:1, to:6};
 staticGameData.bridges[7] = {from:0, to:3};
 staticGameData.bridges[8] = {from:4, to:7};
-staticGameData.bridges[9] = {from:3, to:10};
-staticGameData.bridges[10] = {from:7, to:10};
-staticGameData.bridges[11] = {from:10, to:11};
-staticGameData.bridges[12] = {from:3, to:7};
-staticGameData.bridges[13] = {from:4, to:5};
-staticGameData.bridges[14] = {from:5, to:6};
-staticGameData.bridges[15] = {from:5, to:9};
-staticGameData.bridges[16] = {from:5, to:8};
-staticGameData.bridges[17] = {from:6, to:9};
-staticGameData.bridges[18] = {from:9, to:12};
-staticGameData.bridges[19] = {from:8, to:12};
-staticGameData.bridges[20] = {from:11, to:12};
-staticGameData.bridges[21] = {from:7, to:11};
-staticGameData.bridges[22] = {from:7, to:8};
+staticGameData.bridges[9] = {from:3, to:7};
+staticGameData.bridges[10] = {from:4, to:5};
+staticGameData.bridges[11] = {from:5, to:6};
+staticGameData.bridges[12] = {from:5, to:9};
+staticGameData.bridges[13] = {from:5, to:8};
+staticGameData.bridges[14] = {from:6, to:9};
+staticGameData.bridges[15] = {from:9, to:10};
+staticGameData.bridges[16] = {from:8, to:10};
+staticGameData.bridges[17] = {from:11, to:10};
+staticGameData.bridges[18] = {from:7, to:11};
+staticGameData.bridges[19] = {from:7, to:8};
+staticGameData.bridges[20] = {from:3, to:12};
+staticGameData.bridges[21] = {from:7, to:12};
+staticGameData.bridges[22] = {from:12, to:11};
 
 /* Define the colors that are used for the various players */
 /**
@@ -249,6 +250,16 @@ io.sockets.on('connection', function (socket) {
         util.log(util.inspect(stateMachine.playerOrder));
         stateMachine.currentPlayer = stateMachine.playerOrder[0];
         stateMachine.setupRound = true;
+        /* Remove village 12 and its bridges when it is a 3-player game */
+        if(stateMachine.playerOrder.length == 3) {
+            staticGameData.villages.splice(-1,1);
+            staticGameData.bridges.splice(-3,3);
+            delete stateMachine['villages']['village_12'];
+            io.sockets.emit('_updateGameData', {
+                bridges: staticGameData.bridges,
+                villages: staticGameData.villages
+            });
+        }
         io.sockets.emit('_initNewGame');
         io.sockets.emit('_updateStateMachineValue', {
             currentPlayer:stateMachine.currentPlayer

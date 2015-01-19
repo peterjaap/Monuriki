@@ -98,6 +98,13 @@ function initGame() {
         shangrila.playerOrder = stateMachine.playerOrder;
     });
 
+    socket.on('_updateGameData', function(data) {
+        console.log(data);
+        shangrila.bridges = data.bridges;
+        shangrila.villages = data.villages;
+        stateMachine.villages = data.villages;
+    });
+
     // Client functions
     socket.on('_removeBridge', function (data) {
         shangrila.removeBridge(data);
