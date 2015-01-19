@@ -137,9 +137,7 @@ staticGameData.numberOfActiveMessages = 0;
 
 staticGameData.messageHistory = [];
 
-staticGameData.aiDifficulty = 'easy';
-
-staticGameData.gameMode = 'multiplayer';
+staticGameData.autoSetupRound = true;
 
 /* Configure initial statemachine */
 var stateMachine = {};
@@ -250,6 +248,7 @@ io.sockets.on('connection', function (socket) {
         console.log('Player order; ');
         util.log(util.inspect(stateMachine.playerOrder));
         stateMachine.currentPlayer = stateMachine.playerOrder[0];
+        stateMachine.setupRound = true;
         io.sockets.emit('_initNewGame');
         io.sockets.emit('_updateStateMachineValue', {
             currentPlayer:stateMachine.currentPlayer
@@ -259,6 +258,67 @@ io.sockets.on('connection', function (socket) {
     // When player has placed a master, update stateMachine etc
     socket.on('__placeMaster', function(data) {
         logSM();
+        if(data.village_id == 'auto' && stateMachine.setupRound) {
+            // Auto placement for debugging purposes; choose village & guild automatically
+            canPlaceTile = false;
+            do {
+                village_id = getRandomVillageForAutoSetupRound();
+                guild_id = getRandomGuildForAutoSetupRound();
+
+                guildName = staticGameData.guilds[guild_id];
+
+                sum = 0;
+                sumForPlayer = 0;
+                sumGuildForPlayer = 0;
+                specificTileAmount = 0;
+                guildAllowed = true;
+
+                // check whether this specific tile is available
+                // check whether the player already has placed this guild somewhere
+                // check whether there are less than 3 masters in this village
+                // check whether the current player has less than 2 masters in this village
+                for(var village in stateMachine['villages']) {
+                    for(var player in stateMachine['villages'][village]) {
+                        for(var guild in stateMachine['villages'][village][player]) {
+                            amount = stateMachine['villages'][village][player][guild];
+                            playerColor = player.replace('player_','');
+                            if(typeof amount == 'number') {
+                                if (village.substr(village.indexOf('_') + 1) == village_id) {
+                                    sum += amount;
+                                    if (playerColor == stateMachine.currentPlayer) {
+                                        sumForPlayer += amount;
+                                    }
+                                }
+                                if (playerColor == stateMachine.currentPlayer && guild == guildName.substr(0, 1)) {
+                                    sumGuildForPlayer += amount;
+                                }
+                                if (guild == guildName.substr(0, 1) && village.substr(village.indexOf('_') + 1) == village_id) {
+                                    specificTileAmount += amount;
+                                }
+                            }
+                        }
+                    }
+                }
+                console.log('Sum guild for player ' + stateMachine.currentPlayer + '; ' + sumGuildForPlayer);
+
+                if(
+                    sum < 3 &&
+                    sumForPlayer < 2 &&
+                    sumGuildForPlayer == 0 &&
+                    specificTileAmount == 0
+                ) {
+                    canPlaceTile = true;
+                    data.guildName = guildName;
+                    data.guild_id = guild_id;
+                    data.village_id = village_id;
+                    data.player = stateMachine.currentPlayer;
+                }
+            } while(!canPlaceTile);
+        } else if(data.village_id == 'auto' && !stateMachine.setupRound) {
+            return;
+        }
+
+        console.log('Updating state machine; village ' + data.village_id + ' - ' + data.player + ' - ' + data.guildName);
         // Update state machine
         stateMachine['villages']['village_' + data.village_id]['player_' + data.player][data.guildName.substr(0,1)] += 1;
 
@@ -311,5 +371,13 @@ io.sockets.on('connection', function (socket) {
             });
         }
     });
+
+    function getRandomVillageForAutoSetupRound() {
+        return Math.floor(Math.random(0,1)*staticGameData.villages.length);
+    }
+
+    function getRandomGuildForAutoSetupRound() {
+        return Math.floor(Math.random(0,1)*staticGameData.guilds.length);
+    }
 
 });

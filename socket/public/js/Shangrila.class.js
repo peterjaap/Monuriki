@@ -65,7 +65,7 @@ Shangrila.prototype.splashScreen = function() {
 
     var splashContainer = new createjs.Container();
 
-    var title = new createjs.Text('The Bridges of Shangri-la',(stage.canvas.width * 0.06) + 'px Arial','black');
+    var title = new createjs.Text('The Bridges of Shangrila',(stage.canvas.width * 0.06) + 'px Arial','black');
     bounds = title.getBounds();
     title.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
     title.y = stage.canvas.height * 0.25;
@@ -164,7 +164,7 @@ Shangrila.prototype.lobby = function() {
 
     var lobbyContainer = new createjs.Container();
 
-    var title = new createjs.Text('The Bridges of Shangri-la Lobby',(stage.canvas.width * 0.03) + 'px Arial','black');
+    var title = new createjs.Text('The Bridges of Shangrila Lobby',(stage.canvas.width * 0.03) + 'px Arial','black');
     bounds = title.getBounds();
     title.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
     title.y = stage.canvas.height * 0.25;
@@ -259,7 +259,7 @@ Shangrila.prototype.lobby = function() {
 Shangrila.prototype.initNewGame = function() {
     shangrila.inSplash = false;
     shangrila.inLobby = false;
-    this.setupRound = true;
+    shangrila.setupRound = true;
 
     if(lobbyContainer = stage.getChildByName('lobbyContainer')) {
         stage.removeChild(lobbyContainer); // remove splash page from stage
@@ -292,22 +292,36 @@ Shangrila.prototype.initNewGame = function() {
 
 /* Update the current player indicator */
 Shangrila.prototype.updateCurrentPlayer = function() {
-    if(turnIndicator = stage.getChildByName('turnIndicator')) {
-        stage.removeChild(turnIndicator);
-    }
     if(shangrila.local_player == shangrila.currentPlayer) {
         turnIndicatorText = 'your turn';
         shangrila.showMessage('It is your turn');
+
+        if(shangrila.autoSetupRound && shangrila.setupRound) {
+            // Auto setup round enabled for debugging purposes; auto place master - 1 sec delay
+            setTimeout(function () {
+                socket.emit('__placeMaster', {
+                    village_id: 'auto',
+                    guild_id: 'auto',
+                    guildName: 'auto',
+                    player: shangrila.local_player
+                });
+            }, 1000);
+        }
     } else {
         turnIndicatorText = shangrila.currentPlayer + '\'s turn';
         shangrila.showMessage('It is player ' + shangrila.currentPlayer + '\'s turn');
     }
-    var turnIndicator = new createjs.Text(turnIndicatorText, '30px Arial','black');
-    var backgroundControldeck = stage.getChildByName('backgroundControldeck');
-    turnIndicator.x = stage.canvas.width * 0.85;
-    turnIndicator.name = 'turnIndicator';
-    turnIndicator.y = stage.canvas.height * 0.9;
-    stage.addChild(turnIndicator);
+    /* Update (or create) turn indicator */
+    if(turnIndicator = stage.getChildByName('turnIndicator')) {
+        turnIndicator.text = turnIndicatorText;
+    } else {
+        var turnIndicator = new createjs.Text(turnIndicatorText, '30px Arial','black');
+        var backgroundControldeck = stage.getChildByName('backgroundControldeck');
+        turnIndicator.x = stage.canvas.width * 0.85;
+        turnIndicator.name = 'turnIndicator';
+        turnIndicator.y = stage.canvas.height * 0.9;
+        stage.addChild(turnIndicator);
+    }
 };
 
 /* Draws the sidebar of the game board when in-game */
@@ -712,7 +726,6 @@ Shangrila.prototype.placeMaster = function(data, event) {
 Shangrila.prototype.updateGuildShield = function(data) {
     var village = stage.getChildByName('village_' + data.village_id);
     var guildShapeSmall = stage.getChildByName('guild_shape_small_' + data.guild_id + '_' + data.village_id);
-
 
     if (shangrila.setupRound) {
         guildShapeSmall.graphics.beginFill(data.player).rect(

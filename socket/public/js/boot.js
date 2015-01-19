@@ -90,7 +90,7 @@ function initGame() {
         shangrila.colors = staticGameData.colors;
         shangrila.numberOfActiveMessages = staticGameData.numberOfActiveMessages;
         shangrila.messageHistory = staticGameData.messageHistory;
-        shangrila.gameMode = staticGameData.gameMode;
+        shangrila.autoSetupRound = staticGameData.autoSetupRound;
 
         // Fill state machine data
         stateMachine = data.stateMachine;
