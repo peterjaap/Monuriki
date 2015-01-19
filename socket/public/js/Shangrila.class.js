@@ -702,10 +702,19 @@ Shangrila.prototype.placeMaster = function(data, event) {
             for (var key in village.masterTiles) {
                 totalMasterTiles += village.masterTiles[key];
             }
-            if (totalMasterTiles >= 3) {
-                shangrila.showMessage('Sorry, there are already 3 masters in this village.');
-            } else if (village.masterTiles[data.player] >= 2) {
-                shangrila.showMessage('Sorry, you already have 2 masters in this village.');
+            if(shangrila.activePlayers.length == 3) {
+                villageLimit = 2;
+                perPlayerLimit = 1;
+                pluralSuffix = null;
+            } else {
+                villageLimit = 3;
+                perPlayerLimit = 2;
+                pluralSuffix = 's';
+            }
+            if (totalMasterTiles >= limit) {
+                shangrila.showMessage('Sorry, there are already ' + limit + ' masters in this village.');
+            } else if (village.masterTiles[data.player] >= perPlayerLimit) {
+                shangrila.showMessage('Sorry, you already have ' + perPlayerLimit + ' master' + pluralSuffix + ' in this village.');
             } else {
                 socket.emit('__placeMaster', {
                     'village_id': data.village_id,

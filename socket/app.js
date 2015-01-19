@@ -312,9 +312,17 @@ io.sockets.on('connection', function (socket) {
                 }
                 console.log('Sum guild for player ' + stateMachine.currentPlayer + '; ' + sumGuildForPlayer);
 
+                if(stateMachine.activePlayers.length == 3) {
+                    villageLimit = 2;
+                    perPlayerLimit = 1;
+                } else {
+                    villageLimit = 3;
+                    perPlayerLimit = 2;
+                }
+
                 if(
-                    sum < 3 &&
-                    sumForPlayer < 2 &&
+                    sum < villageLimit &&
+                    sumForPlayer < perPlayerLimit &&
                     sumGuildForPlayer == 0 &&
                     specificTileAmount == 0
                 ) {
