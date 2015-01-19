@@ -312,7 +312,8 @@ io.sockets.on('connection', function (socket) {
                 }
                 console.log('Sum guild for player ' + stateMachine.currentPlayer + '; ' + sumGuildForPlayer);
 
-                if(stateMachine.activePlayers.length == 3) {
+                console.log('Active players length; ' + stateMachine.playerOrder.length);
+                if(stateMachine.playerOrder.length == 3) {
                     villageLimit = 2;
                     perPlayerLimit = 1;
                 } else {
