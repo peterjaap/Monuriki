@@ -155,6 +155,7 @@ stateMachine['activePlayersColors']['yellow'] = null;
 stateMachine['activePlayersColors']['violet'] = null;
 stateMachine['playerOrder'] = ['blue','red','yellow','violet']; // for singleplayer
 stateMachine['playerOrder'] = stateMachine['playerOrder'].shuffle(); // random order through shuffling
+stateMachine['setupRound'] = true;
 for(i=0;i<staticGameData.villages.length;i++) {
     stateMachine['villages']['village_' + i] = {};
     for(j=0;j<staticGameData.colorNames.length;j++) {
@@ -257,24 +258,43 @@ io.sockets.on('connection', function (socket) {
 
     // When player has placed a master, update stateMachine etc
     socket.on('__placeMaster', function(data) {
+        logSM();
         // Update state machine
         stateMachine['villages']['village_' + data.village_id]['player_' + data.player][data.guildName.substr(0,1)] += 1;
-        // Calculate end of turn
-        var total = 0;
-        for(i=0;i<staticGameData.villages.length;i++) {
-            guildsPlayer = stateMachine['villages']['village_' + i]['player_' + data.player];
-            for(guild in guildsPlayer) {
-                if(guildsPlayer.hasOwnProperty('guild')) {
-                    total += guildsPlayer[guild];
-                }
-            }
-        }
 
         /* Update guild shields on all clients */
         console.log('Updating guild shields for all clients');
         io.sockets.emit('_updateGuildShield', data);
 
         // Calculate whether the setup round is finished (ie; check if all players have 5 of all guilds left)
+        if(stateMachine.setupRound == true) {
+            // Calculate end of turn
+            total = [];
+            for(i=0;i<staticGameData.villages.length;i++) {
+                for(j=0;j<stateMachine.playerOrder.length;j++) {
+                    for(k=0;k<staticGameData.guilds.length;k++) {
+                        guilds = stateMachine['villages']['village_' + i]['player_' + stateMachine.playerOrder[j]][staticGameData.guilds[k].substr(0,1)];
+                        if(typeof total[stateMachine.playerOrder[j]] == 'undefined') {
+                            total[stateMachine.playerOrder[j]] = guilds;
+                        } else {
+                            total[stateMachine.playerOrder[j]] += guilds;
+                        }
+                    }
+                }
+            }
+            stateMachine.setupRound = false;
+            for(var color in total) {
+                if(total.hasOwnProperty(color)) {
+                    if (total[color] != 7) {
+                        // If all colors have 7 masters placed, the setup round is over, if not, it is still going
+                        stateMachine.setupRound = true;
+                    }
+                }
+            }
+            if(!stateMachine.setupRound) {
+                io.sockets.send('Set up round is over, game starts! Good luck!');
+            }
+        }
 
         // Define who is next
         index = stateMachine.playerOrder.indexOf(stateMachine.currentPlayer);
