@@ -3,6 +3,8 @@
 
    TODO:
    - apply consistency in how to identify players; through their client ID or their color? activePlayers vs activePlayersColors
+   - for client; decide where to save game data - in shangrila object or in stateMachine object
+   - replace incremental stateMachine update with full stateMachine update to secure single source of truth and eliminate cheating
  * */
 
 var fs = require('fs');
@@ -312,6 +314,7 @@ io.sockets.on('connection', function (socket) {
                 }
                 console.log('Sum guild for player ' + stateMachine.currentPlayer + '; ' + sumGuildForPlayer);
 
+                /* The placing limits are different for a 3 player game than for a 4 player game */
                 console.log('Active players length; ' + stateMachine.playerOrder.length);
                 if(stateMachine.playerOrder.length == 3) {
                     villageLimit = 2;
@@ -341,6 +344,9 @@ io.sockets.on('connection', function (socket) {
         console.log('Updating state machine; village ' + data.village_id + ' - ' + data.player + ' - ' + data.guildName);
         // Update state machine
         stateMachine['villages']['village_' + data.village_id]['player_' + data.player][data.guildName.substr(0,1)] += 1;
+        io.sockets.emit('_updateStateMachineValue', {
+            villages:stateMachine.villages
+        });
 
         /* Update guild shields on all clients */
         console.log('Updating guild shields for all clients');
@@ -372,6 +378,9 @@ io.sockets.on('connection', function (socket) {
                 }
             }
             if(!stateMachine.setupRound) {
+                io.sockets.emit('_updateStateMachineValue', {
+                    setupRound:stateMachine.setupRound
+                });
                 io.sockets.send('Set up round is over, game starts! Good luck!');
             }
         }

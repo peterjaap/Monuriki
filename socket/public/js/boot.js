@@ -133,6 +133,9 @@ function initGame() {
             if(index == 'currentPlayer') {
                 shangrila.updateCurrentPlayer();
             }
+            if(index == 'villages') {
+                stateMachine[index] = data[index];
+            }
         }
     });
 

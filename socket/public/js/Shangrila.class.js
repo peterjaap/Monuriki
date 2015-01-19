@@ -307,6 +307,9 @@ Shangrila.prototype.updateCurrentPlayer = function() {
                 });
             }, 1000);
         }
+        if(!shangrila.setupRound) {
+            shangrila.drawMenu();
+        }
     } else {
         turnIndicatorText = shangrila.currentPlayer + '\'s turn';
         shangrila.showMessage('It is player ' + shangrila.currentPlayer + '\'s turn');
@@ -324,7 +327,7 @@ Shangrila.prototype.updateCurrentPlayer = function() {
     }
 };
 
-/* Draws the sidebar of the game board when in-game */
+/* Draws the three turn options for the current player */
 Shangrila.prototype.drawMenu = function() {
     var menuScreen = new createjs.Container();
     menuScreen.name = 'menuScreen';
@@ -697,11 +700,13 @@ Shangrila.prototype.placeMaster = function(data, event) {
     var amount = stage.getChildByName('guild_amount_' + data.player + '_' + data.guildName.substr(0,1));
 
     if(data.player == shangrila.currentPlayer) {
+        // Set up round
         if (shangrila.setupRound && amount.amount == 6) {
             totalMasterTiles = 0;
             for (var key in village.masterTiles) {
                 totalMasterTiles += village.masterTiles[key];
             }
+            /* The placing limits are different for a 3 player game than for a 4 player game */
             if(shangrila.activePlayers.length == 3) {
                 villageLimit = 2;
                 perPlayerLimit = 1;
@@ -726,8 +731,22 @@ Shangrila.prototype.placeMaster = function(data, event) {
         } else if (shangrila.setupRound && amount.amount < 6) {
             shangrila.showMessage('Sorry, you have already placed a ' + data.guildName + ' master in a village. This is not allowed in the first round.');
         } else if (!shangrila.setupRound) {
-            // normal game
-            alert('Normal game! What to do?');
+            // Normal game
+            // A master can only be placed in a village when the current player has at least one master in that village
+            totalGuildsInVillage = 0;
+            for(var guild in stateMachine['villages']['village_' + data.village_id]['player_' + data.player]) {
+                totalGuildsInVillage += stateMachine['villages']['village_' + data.village_id]['player_' + data.player][guild];
+            }
+            if(totalGuildsInVillage > 0) {
+                socket.emit('__placeMaster', {
+                    'village_id': data.village_id,
+                    guild_id: data.guild_id,
+                    guildName: data.guildName,
+                    player: data.player
+                });
+            } else {
+                shangrila.showMessage('You can only place a master in a village where you have at least one other master.');
+            }
         }
     } else {
         shangrila.showMessage('It is not your turn! It is ' + shangrila.currentPlayer + '\'s turn!');
@@ -738,32 +757,27 @@ Shangrila.prototype.updateGuildShield = function(data) {
     var village = stage.getChildByName('village_' + data.village_id);
     var guildShapeSmall = stage.getChildByName('guild_shape_small_' + data.guild_id + '_' + data.village_id);
 
-    if (shangrila.setupRound) {
-        guildShapeSmall.graphics.beginFill(data.player).rect(
-            guildShapeSmall.getBounds().x,
-            guildShapeSmall.getBounds().y,
-            guildShapeSmall.getBounds().width,
-            guildShapeSmall.getBounds().height
-        ).endFill();
+    guildShapeSmall.graphics.beginFill(data.player).rect(
+        guildShapeSmall.getBounds().x,
+        guildShapeSmall.getBounds().y,
+        guildShapeSmall.getBounds().width,
+        guildShapeSmall.getBounds().height
+    ).endFill();
 
-        guildShapeSmall.removeAllEventListeners();
+    guildShapeSmall.removeAllEventListeners();
 
-        village.masterTiles[data.player] += 1;
-        if(data.player == shangrila.currentPlayer) {
-            /* Update amount in sidebar */
-            var amount = stage.getChildByName('guild_amount_' + data.player + '_' + data.guildName.substr(0,1));
-            if(typeof amount != 'undefined') {
-                amount.amount = amount.amount - 1;
-                amount.text = amount.amount;
-            }
-            // Show message
-            shangrila.showMessage('You have placed a ' + data.guildName + ' master in village ' + data.village_id);
-        } else {
-            shangrila.showMessage(data.player + ' has placed a ' + data.guildName + ' master in village ' + data.village_id);
+    village.masterTiles[data.player] += 1;
+    if(data.player == shangrila.currentPlayer) {
+        /* Update amount in sidebar */
+        var amount = stage.getChildByName('guild_amount_' + data.player + '_' + data.guildName.substr(0,1));
+        if(typeof amount != 'undefined') {
+            amount.amount = amount.amount - 1;
+            amount.text = amount.amount;
         }
-    } else if (!shangrila.setupRound) {
-        // normal game
-        alert('Normal game! What to do?');
+        // Show message
+        shangrila.showMessage('You have placed a ' + data.guildName + ' master in village ' + data.village_id);
+    } else {
+        shangrila.showMessage(data.player + ' has placed a ' + data.guildName + ' master in village ' + data.village_id);
     }
 };
 
