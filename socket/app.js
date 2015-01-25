@@ -136,11 +136,132 @@ staticGameData.colors['violet'] = {};
 staticGameData.colors['violet']['gamecanvasBackground'] = '#e6aaff';
 staticGameData.colors['violet']['controldeckBackground'] = '#58007d';
 
+/* Preset starting placements for 3 players */
+staticGameData.startingPlacements = {};
+staticGameData.startingPlacements[3] = {};
+staticGameData.startingPlacements[3].villages = {};
+staticGameData.startingPlacements[3].villages['village_0'] = {};
+staticGameData.startingPlacements[3].villages['village_0']['player_blue'] = {};
+staticGameData.startingPlacements[3].villages['village_0']['player_red'] = {};
+staticGameData.startingPlacements[3].villages['village_0']['player_blue']['R'] = 1;
+staticGameData.startingPlacements[3].villages['village_0']['player_red']['Y'] = 1;
+staticGameData.startingPlacements[3].villages['village_1'] = {};
+staticGameData.startingPlacements[3].villages['village_1']['player_blue'] = {};
+staticGameData.startingPlacements[3].villages['village_1']['player_red'] = {};
+staticGameData.startingPlacements[3].villages['village_1']['player_blue']['A'] = 1;
+staticGameData.startingPlacements[3].villages['village_1']['player_red']['F'] = 1;
+staticGameData.startingPlacements[3].villages['village_2'] = {};
+staticGameData.startingPlacements[3].villages['village_2']['player_blue'] = {};
+staticGameData.startingPlacements[3].villages['village_2']['player_yellow'] = {};
+staticGameData.startingPlacements[3].villages['village_2']['player_blue']['P'] = 1;
+staticGameData.startingPlacements[3].villages['village_2']['player_yellow']['Y'] = 1;
+staticGameData.startingPlacements[3].villages['village_4'] = {};
+staticGameData.startingPlacements[3].villages['village_4']['player_blue'] = {};
+staticGameData.startingPlacements[3].villages['village_4']['player_red'] = {};
+staticGameData.startingPlacements[3].villages['village_4']['player_blue']['Y'] = 1;
+staticGameData.startingPlacements[3].villages['village_4']['player_red']['P'] = 1;
+staticGameData.startingPlacements[3].villages['village_5'] = {};
+staticGameData.startingPlacements[3].villages['village_5']['player_yellow'] = {};
+staticGameData.startingPlacements[3].villages['village_5']['player_red'] = {};
+staticGameData.startingPlacements[3].villages['village_5']['player_yellow']['R'] = 1;
+staticGameData.startingPlacements[3].villages['village_5']['player_red']['A'] = 1;
+staticGameData.startingPlacements[3].villages['village_6'] = {};
+staticGameData.startingPlacements[3].villages['village_6']['player_yellow'] = {};
+staticGameData.startingPlacements[3].villages['village_6']['player_red'] = {};
+staticGameData.startingPlacements[3].villages['village_6']['player_yellow']['D'] = 1;
+staticGameData.startingPlacements[3].villages['village_6']['player_red']['R'] = 1;
+staticGameData.startingPlacements[3].villages['village_7'] = {};
+staticGameData.startingPlacements[3].villages['village_7']['player_yellow'] = {};
+staticGameData.startingPlacements[3].villages['village_7']['player_blue'] = {};
+staticGameData.startingPlacements[3].villages['village_7']['player_yellow']['F'] = 1;
+staticGameData.startingPlacements[3].villages['village_7']['player_blue']['H'] = 1;
+staticGameData.startingPlacements[3].villages['village_8'] = {};
+staticGameData.startingPlacements[3].villages['village_8']['player_yellow'] = {};
+staticGameData.startingPlacements[3].villages['village_8']['player_blue'] = {};
+staticGameData.startingPlacements[3].villages['village_8']['player_yellow']['H'] = 1;
+staticGameData.startingPlacements[3].villages['village_8']['player_blue']['D'] = 1;
+staticGameData.startingPlacements[3].villages['village_9'] = {};
+staticGameData.startingPlacements[3].villages['village_9']['player_red'] = {};
+staticGameData.startingPlacements[3].villages['village_9']['player_blue'] = {};
+staticGameData.startingPlacements[3].villages['village_9']['player_red']['H'] = 1;
+staticGameData.startingPlacements[3].villages['village_9']['player_blue']['F'] = 1;
+staticGameData.startingPlacements[3].villages['village_10'] = {};
+staticGameData.startingPlacements[3].villages['village_10']['player_yellow'] = {};
+staticGameData.startingPlacements[3].villages['village_10']['player_yellow']['A'] = 1;
+staticGameData.startingPlacements[3].villages['village_11'] = {};
+staticGameData.startingPlacements[3].villages['village_11']['player_red'] = {};
+staticGameData.startingPlacements[3].villages['village_11']['player_yellow'] = {};
+staticGameData.startingPlacements[3].villages['village_11']['player_red']['D'] = 1;
+staticGameData.startingPlacements[3].villages['village_11']['player_yellow']['P'] = 1;
+
+/* Preset starting placements for 4 players */
+staticGameData.startingPlacements = {};
+staticGameData.startingPlacements[4] = {};
+staticGameData.startingPlacements[4].villages = {};
+staticGameData.startingPlacements[4].villages['village_0'] = {};
+staticGameData.startingPlacements[4].villages['village_0']['player_violet'] = {};
+staticGameData.startingPlacements[4].villages['village_0']['player_red'] = {};
+staticGameData.startingPlacements[4].villages['village_0']['player_violet']['Y'] = 1;
+staticGameData.startingPlacements[4].villages['village_0']['player_violet']['F'] = 1;
+staticGameData.startingPlacements[4].villages['village_0']['player_red']['H'] = 1;
+staticGameData.startingPlacements[4].villages['village_2'] = {};
+staticGameData.startingPlacements[4].villages['village_2']['player_blue'] = {};
+staticGameData.startingPlacements[4].villages['village_2']['player_yellow'] = {};
+staticGameData.startingPlacements[4].villages['village_2']['player_red'] = {};
+staticGameData.startingPlacements[4].villages['village_2']['player_blue']['A'] = 1;
+staticGameData.startingPlacements[4].villages['village_2']['player_yellow']['P'] = 1;
+staticGameData.startingPlacements[4].villages['village_2']['player_red']['F'] = 1;
+staticGameData.startingPlacements[4].villages['village_3'] = {};
+staticGameData.startingPlacements[4].villages['village_3']['player_yellow'] = {};
+staticGameData.startingPlacements[4].villages['village_3']['player_red'] = {};
+staticGameData.startingPlacements[4].villages['village_3']['player_red']['A'] = 1;
+staticGameData.startingPlacements[4].villages['village_3']['player_yellow']['D'] = 1;
+staticGameData.startingPlacements[4].villages['village_4'] = {};
+staticGameData.startingPlacements[4].villages['village_4']['player_red'] = {};
+staticGameData.startingPlacements[4].villages['village_4']['player_blue'] = {};
+staticGameData.startingPlacements[4].villages['village_4']['player_red']['P'] = 1;
+staticGameData.startingPlacements[4].villages['village_4']['player_blue']['Y'] = 1;
+staticGameData.startingPlacements[4].villages['village_5'] = {};
+staticGameData.startingPlacements[4].villages['village_5']['player_red'] = {};
+staticGameData.startingPlacements[4].villages['village_5']['player_yellow'] = {};
+staticGameData.startingPlacements[4].villages['village_5']['player_violet'] = {};
+staticGameData.startingPlacements[4].villages['village_5']['player_red']['R'] = 1;
+staticGameData.startingPlacements[4].villages['village_5']['player_yellow']['A'] = 1;
+staticGameData.startingPlacements[4].villages['village_5']['player_violet']['P'] = 1;
+staticGameData.startingPlacements[4].villages['village_7'] = {};
+staticGameData.startingPlacements[4].villages['village_7']['player_blue'] = {};
+staticGameData.startingPlacements[4].villages['village_7']['player_blue']['F'] = 1;
+staticGameData.startingPlacements[4].villages['village_7']['player_blue']['H'] = 1;
+staticGameData.startingPlacements[4].villages['village_8'] = {};
+staticGameData.startingPlacements[4].villages['village_8']['player_yellow'] = {};
+staticGameData.startingPlacements[4].villages['village_8']['player_blue'] = {};
+staticGameData.startingPlacements[4].villages['village_8']['player_yellow']['R'] = 1;
+staticGameData.startingPlacements[4].villages['village_8']['player_blue']['D'] = 1;
+staticGameData.startingPlacements[4].villages['village_8']['player_yellow']['H'] = 1;
+staticGameData.startingPlacements[4].villages['village_9'] = {};
+staticGameData.startingPlacements[4].villages['village_9']['player_violet'] = {};
+staticGameData.startingPlacements[4].villages['village_9']['player_yellow'] = {};
+staticGameData.startingPlacements[4].villages['village_9']['player_violet']['D'] = 1;
+staticGameData.startingPlacements[4].villages['village_9']['player_yellow']['F'] = 1;
+staticGameData.startingPlacements[4].villages['village_9']['player_violet']['H'] = 1;
+staticGameData.startingPlacements[4].villages['village_10'] = {};
+staticGameData.startingPlacements[4].villages['village_10']['player_blue'] = {};
+staticGameData.startingPlacements[4].villages['village_10']['player_yellow'] = {};
+staticGameData.startingPlacements[4].villages['village_10']['player_blue']['R'] = 1;
+staticGameData.startingPlacements[4].villages['village_10']['player_blue']['P'] = 1;
+staticGameData.startingPlacements[4].villages['village_10']['player_yellow']['Y'] = 1;
+staticGameData.startingPlacements[4].villages['village_11'] = {};
+staticGameData.startingPlacements[4].villages['village_11']['player_violet'] = {};
+staticGameData.startingPlacements[4].villages['village_11']['player_red'] = {};
+staticGameData.startingPlacements[4].villages['village_11']['player_violet']['R'] = 1;
+staticGameData.startingPlacements[4].villages['village_11']['player_red']['D'] = 1;
+staticGameData.startingPlacements[4].villages['village_11']['player_red']['Y'] = 1;
+
+/* Misc */
 staticGameData.numberOfActiveMessages = 0;
-
 staticGameData.messageHistory = [];
-
 staticGameData.autoSetupRound = false;
+staticGameData.presetStartingPositions = true;
 
 /* Configure initial statemachine */
 var stateMachine = {};
@@ -263,6 +384,31 @@ io.sockets.on('connection', function (socket) {
             });
         }
         io.sockets.emit('_initNewGame');
+        if(stateMachine.setupRound && stateMachine.presetStartingPositions) {
+            // Combine starting positions with staticGameData
+            for(i=0;i<staticGameData.villages.length;i++) {
+                stateMachine['villages']['village_' + i] = {};
+                for(j=0;j<staticGameData.colorNames.length;j++) {
+                    stateMachine['villages']['village_' + i]['player_' + stateMachine.playerOrder[j]] = {};
+                    for(k=0;k<staticGameData.guilds.length;k++) {
+                        if(typeof stateMachine.presetStartingPositions[stateMachine.playerOrder.length].villages['village_' + i] != 'undefined') {
+                            if(typeof stateMachine.presetStartingPositions[stateMachine.playerOrder.length].villages['village_' + i]['player_' + stateMachine.playerOrder[j]] != 'undefined') {
+                                if(typeof stateMachine.presetStartingPositions[stateMachine.playerOrder.length].villages['village_' + i]['player_' + stateMachine.playerOrder[j]][staticGameData.guilds[k].substr(0,1)] != 'undefined') {
+                                    stateMachine['villages']['village_' + i]['player_' + stateMachine.playerOrder[j]][staticGameData.guilds[k].substr(0,1)] = 1;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            io.sockets.emit('_updateGameData', {
+                villages: staticGameData.villages
+            });
+            stateMachine.setupRound = false;
+            io.sockets.emit('_updateStateMachineValue', {
+                setupRound:stateMachine.setupRound
+            });
+        }
         io.sockets.emit('_updateStateMachineValue', {
             currentPlayer:stateMachine.currentPlayer
         });

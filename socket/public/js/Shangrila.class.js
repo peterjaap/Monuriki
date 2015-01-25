@@ -250,6 +250,45 @@ Shangrila.prototype.lobby = function() {
         waitingToStartNotice.y = stage.canvas.height * 0.40;
         lobbyContainer.addChild(waitingToStartNotice);
     }
+    if(shangrila.gameInitiator == shangrila.local_player) {
+        var presetStartingPlacements = new createjs.Text('Use preset starting placements', (stage.canvas.width * 0.015) + 'px Arial', 'black');
+        bounds = presetStartingPlacements.getBounds();
+        presetStartingPlacements.x = (stage.canvas.width * 0.5) - (bounds.width / 2) + stage.canvas.width * 0.01;
+        presetStartingPlacements.y = stage.canvas.height * 0.63;
+        lobbyContainer.addChild(presetStartingPlacements);
+
+        checkboxX = presetStartingPlacements.x - stage.canvas.width * 0.025;
+        checkboxY = presetStartingPlacements.y - presetStartingPlacements.getBounds().height * 0.1;
+        checkboxWidth = stage.canvas.width * 0.02;
+        checkboxHeight = checkboxWidth;
+        checkboxChecked = shangrila.presetStartingPositions;
+        fillColor = (checkboxChecked == true ? 'black' : 'white');
+        var checkbox = new createjs.Graphics()
+            .beginFill(fillColor)
+            .beginStroke('black')
+            .rect(
+                checkboxX,
+                checkboxY,
+                checkboxWidth,
+                checkboxHeight
+            )
+            .endFill();
+
+        var checkboxShape = new createjs.Shape(checkbox);
+        checkboxShape.checked = checkboxChecked;
+        checkboxShape.setBounds(100,100,100,100);
+        checkboxShape.addEventListener('click', function (event) {
+            checkboxShape.checked = !checkboxShape.checked;
+            fillColor = (checkboxShape.checked == true ? 'black' : 'white');
+            event.target.graphics.beginFill(fillColor).rect(
+                checkboxX,
+                checkboxY,
+                checkboxWidth,
+                checkboxHeight
+            ).endFill();
+        });
+        lobbyContainer.addChild(checkboxShape);
+    }
 
     lobbyContainer.name = 'lobbyContainer';
     stage.addChild(lobbyContainer);

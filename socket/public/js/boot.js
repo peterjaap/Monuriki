@@ -91,6 +91,7 @@ function initGame() {
         shangrila.numberOfActiveMessages = staticGameData.numberOfActiveMessages;
         shangrila.messageHistory = staticGameData.messageHistory;
         shangrila.autoSetupRound = staticGameData.autoSetupRound;
+        shangrila.presetStartingPositions = staticGameData.presetStartingPositions;
 
         // Fill state machine data
         stateMachine = data.stateMachine;
