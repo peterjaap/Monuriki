@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function(){
     initGame();
 
     /* When loader is finished, show splash screen */
-     loader.on("complete", socket.emit('__showSplashScreen'));
+     loader.on('complete', function () { socket.emit('__showSplashScreen'); });
 });
 
 /* Initialize stage, set canvas width & height, retrieve game data and insert them into the game object */
