@@ -16,7 +16,7 @@ var util = require("util");
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Run server
-var server = app.listen(80);
+var server = app.listen(8000);
 var io = require('socket.io')(server);
 
 /* Array functions */
@@ -140,7 +140,7 @@ staticGameData.numberOfActiveMessages = 0;
 
 staticGameData.messageHistory = [];
 
-staticGameData.autoSetupRound = true;
+staticGameData.autoSetupRound = false;
 
 /* Configure initial statemachine */
 var stateMachine = {};

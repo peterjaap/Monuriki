@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function(){
     initialHeight = window.innerHeight;
 
     /* Create socket */
-    socket = io.connect(document.location.origin);
+    socket = io.connect(document.location.hostname + ':' + 8000);
 
     socket.on('activePlayersUpdate', function(data) {
         shangrila.activePlayers = data;
@@ -168,4 +168,4 @@ var confirmOnPageExit = function (e)  {
     // For Chrome, Safari, IE8+ and Opera 12+
     return message;
 };
-window.onbeforeunload = confirmOnPageExit;
+//window.onbeforeunload = confirmOnPageExit;
