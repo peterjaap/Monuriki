@@ -521,9 +521,6 @@ Shangrila.prototype.drawBridges = function() {
         bridge.graphics.endStroke();
         bridge.bridge_id = i;
         bridge.name = 'bridge_' + i;
-        bridge.addEventListener('click', function(event) {
-            shangrila.removeBridge({bridge_id: event.target.bridge_id});
-        });
         stage.addChild(bridge);
 
         if(identify) {
