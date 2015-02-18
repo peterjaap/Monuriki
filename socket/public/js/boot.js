@@ -105,7 +105,6 @@ function initGame() {
         }
         if(typeof data.villages != 'undefined') {
             shangrila.villages = data.villages;
-            stateMachine.villages = data.villages;
         }
     });
 
