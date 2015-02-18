@@ -413,14 +413,18 @@ Shangrila.prototype.drawMenu = function() {
 
             if(menuOptions[menuOption] == 'Place master') {
                 optionText.on('click', function (e) {
+                    shangrila.chosenAction = 'place_master';
                     alert('Click on an available tile to place your master.');
                     stage.removeChild(stage.getChildByName('menuScreen'));
                 });
             } else if(menuOptions[menuOption] == 'Place students') {
                 optionText.on('click', function (e) {
+                    shangrila.chosenAction = 'place_students';
                     alert('Click on two of your masters to place two students.');
+                    stage.removeChild(stage.getChildByName('menuScreen'));
                 });
             } else if(menuOptions[menuOption] == 'Move students') {
+                shangrila.chosenAction = 'move_students';
                 optionText.on('click', function (e) {
                     alert('Choose the village from where you want to move your students, followed by the village where you want them to go.');
                 });
@@ -714,7 +718,14 @@ Shangrila.prototype.drawGuildShields = function() {
                 ).endFill();
             });
             guildShapeSmall.addEventListener('click', function(event) {
-                shangrila.placeMaster({village_id: event.target.village_id, guild_id: event.target.guild_id, guildName: event.target.guildName, player: shangrila.local_player }, event);
+                if(shangrila.chosenAction == 'place_master') {
+                    shangrila.placeMaster({
+                        village_id: event.target.village_id,
+                        guild_id: event.target.guild_id,
+                        guildName: event.target.guildName,
+                        player: shangrila.local_player
+                    }, event);
+                }
             });
             stage.addChild(guildShapeSmall);
 
@@ -787,6 +798,25 @@ Shangrila.prototype.placeMaster = function(data, event) {
     }
 };
 
+Shangrila.prototype.placeStudent = function(data, event) {
+    if(data.player == shangrila.currentPlayer) {
+        // A student can only be placed on a guild when the current player has exactly one master and 0 students in that village
+        mastersOnGuild = stateMachine.villages['village_' + data.village_id]['player_' + data.player][data.guildName.substr(0,1)];
+        if(mastersOnGuild <= 1) {
+            socket.emit('__placeStudent', {
+                'village_id': data.village_id,
+                guild_id: data.guild_id,
+                guildName: data.guildName,
+                player: data.player
+            });
+        } else {
+            shangrila.showMessage('You can only place a student on a guild where you have 1 master and 0 students.');
+        }
+    } else {
+        shangrila.showMessage('It is not your turn! It is ' + shangrila.currentPlayer + '\'s turn!');
+    }
+};
+
 Shangrila.prototype.updateGuildShield = function(data) {
     if(typeof data.silent == 'undefined') data.silent = false;
     var village = stage.getChildByName('village_' + data.village_id);
@@ -801,21 +831,42 @@ Shangrila.prototype.updateGuildShield = function(data) {
 
     guildShapeSmall.removeAllEventListeners();
 
+    mastersOnGuild = stateMachine.villages['village_' + data.village_id]['player_' + data.player][data.guildName.substr(0,1)];
+    if(mastersOnGuild > 1) {
+        typeOfPlacing = 'student';
+    } else {
+        typeOfPlacing = 'master';
+    }
+
+    if(mastersOnGuild <= 1) {
+        guildShapeSmall.addEventListener('click', function (event) {
+            if (shangrila.chosenAction == 'place_students') {
+                shangrila.placeStudent({
+                    village_id: event.target.village_id,
+                    guild_id: event.target.guild_id,
+                    guildName: event.target.guildName,
+                    player: shangrila.local_player
+                }, event);
+            }
+        });
+    }
+
     village.masterTiles[data.player] += 1;
-    if(data.player == shangrila.currentPlayer) {
+
+    if(data.player == shangrila.local_player) {
         /* Update amount in sidebar */
         var amount = stage.getChildByName('guild_amount_' + data.player + '_' + data.guildName.substr(0,1));
-        if(typeof amount != 'undefined') {
+        if(typeof amount != 'undefined' && amount != null) {
             amount.amount = amount.amount - 1;
             amount.text = amount.amount;
         }
         // Show message
         if(!data.silent) {
-            shangrila.showMessage('You have placed a ' + data.guildName + ' master in village ' + data.village_id);
+            shangrila.showMessage('You have placed a ' + data.guildName + ' ' + typeOfPlacing + ' in village ' + data.village_id);
         }
     } else {
         if(!data.silent) {
-            shangrila.showMessage(data.player + ' has placed a ' + data.guildName + ' master in village ' + data.village_id);
+            shangrila.showMessage(data.player + ' has placed a ' + data.guildName + ' ' + typeOfPlacing + ' in village ' + data.village_id);
         }
     }
 };

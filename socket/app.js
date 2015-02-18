@@ -409,8 +409,8 @@ io.sockets.on('connection', function (socket) {
                     }
                 }
             }
-            io.sockets.emit('_updateGameData', {
-                villages: staticGameData.villages
+            io.sockets.emit('_updateStateMachineValue', {
+                villages: stateMachine.villages
             });
             stateMachine.setupRound = false;
             io.sockets.emit('_updateStateMachineValue', {
@@ -547,11 +547,56 @@ io.sockets.on('connection', function (socket) {
             } else {
                 nextPlayer = stateMachine.playerOrder[0];
             }
+            // Update counters
+            stateMachine.studentsPlacedInThisRound = 0;
             // Update the state machine and the turn indicator
             stateMachine.currentPlayer = nextPlayer;
             io.sockets.emit('_updateStateMachineValue', {
                 currentPlayer:stateMachine.currentPlayer
             });
+        }
+    });
+
+    // When player has placed a student, update stateMachine etc
+    socket.on('__placeStudent', function(data) {
+        // check if placing a student is even possible
+        mastersOnGuild = stateMachine.villages['village_' + data.village_id]['player_' + data.player][data.guildName.substr(0,1)];
+        if(mastersOnGuild != 1) {
+            console.log('Placing student on this guild is not possible; somebody is cheating?');
+            return;
+        }
+
+        // Update state machine
+        console.log('Updating state machine; village ' + data.village_id + ' - ' + data.player + ' - ' + data.guildName);
+        stateMachine['villages']['village_' + data.village_id]['player_' + data.player][data.guildName.substr(0,1)] += 1;
+        io.sockets.emit('_updateStateMachineValue', {
+            villages:stateMachine.villages
+        });
+
+        /* Update guild shields on all clients */
+        console.log('Updating guild shields for all clients');
+        io.sockets.emit('_updateGuildShield', data);
+
+        // Keep track of how many students this round have been placed
+        stateMachine.studentsPlacedInThisRound++;
+
+        // If two, decide who is next
+        if(stateMachine.studentsPlacedInThisRound >= 2) {
+            index = stateMachine.playerOrder.indexOf(stateMachine.currentPlayer);
+            if (typeof index != 'undefined') {
+                if (typeof stateMachine.playerOrder[index + 1] != 'undefined') {
+                    nextPlayer = stateMachine.playerOrder[index + 1];
+                } else {
+                    nextPlayer = stateMachine.playerOrder[0];
+                }
+                // Update counters
+                stateMachine.studentsPlacedInThisRound = 0;
+                // Update the state machine and the turn indicator
+                stateMachine.currentPlayer = nextPlayer;
+                io.sockets.emit('_updateStateMachineValue', {
+                    currentPlayer: stateMachine.currentPlayer
+                });
+            }
         }
     });
 
