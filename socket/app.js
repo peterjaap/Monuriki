@@ -137,7 +137,7 @@ staticGameData.colors['violet']['gamecanvasBackground'] = '#e6aaff';
 staticGameData.colors['violet']['controldeckBackground'] = '#58007d';
 
 /* Preset starting placements for 3 players */
-staticGameData.startingPlacements = {};
+staticGameData.startingPlacements = [];
 staticGameData.startingPlacements[3] = {};
 staticGameData.startingPlacements[3].villages = {};
 staticGameData.startingPlacements[3].villages['village_0'] = {};
@@ -195,7 +195,6 @@ staticGameData.startingPlacements[3].villages['village_11']['player_red']['D'] =
 staticGameData.startingPlacements[3].villages['village_11']['player_yellow']['P'] = 1;
 
 /* Preset starting placements for 4 players */
-staticGameData.startingPlacements = {};
 staticGameData.startingPlacements[4] = {};
 staticGameData.startingPlacements[4].villages = {};
 staticGameData.startingPlacements[4].villages['village_0'] = {};
@@ -295,6 +294,7 @@ function logSM() {
 
 // Listen for server side events
 io.sockets.on('connection', function (socket) {
+    logSM();
     // Send message new player has connected
     util.log("New player has connected: "+socket.id);
 
@@ -383,18 +383,26 @@ io.sockets.on('connection', function (socket) {
                 villages: staticGameData.villages
             });
         }
+
         io.sockets.emit('_initNewGame');
-        if(stateMachine.setupRound && stateMachine.presetStartingPositions) {
+        if(stateMachine.setupRound && staticGameData.presetStartingPositions) {
             // Combine starting positions with staticGameData
             for(i=0;i<staticGameData.villages.length;i++) {
-                stateMachine['villages']['village_' + i] = {};
                 for(j=0;j<staticGameData.colorNames.length;j++) {
-                    stateMachine['villages']['village_' + i]['player_' + stateMachine.playerOrder[j]] = {};
                     for(k=0;k<staticGameData.guilds.length;k++) {
-                        if(typeof stateMachine.presetStartingPositions[stateMachine.playerOrder.length].villages['village_' + i] != 'undefined') {
-                            if(typeof stateMachine.presetStartingPositions[stateMachine.playerOrder.length].villages['village_' + i]['player_' + stateMachine.playerOrder[j]] != 'undefined') {
-                                if(typeof stateMachine.presetStartingPositions[stateMachine.playerOrder.length].villages['village_' + i]['player_' + stateMachine.playerOrder[j]][staticGameData.guilds[k].substr(0,1)] != 'undefined') {
+                        if(typeof staticGameData.startingPlacements[stateMachine.playerOrder.length].villages['village_' + i] != 'undefined') {
+                            if(typeof staticGameData.startingPlacements[stateMachine.playerOrder.length].villages['village_' + i]['player_' + stateMachine.playerOrder[j]] != 'undefined') {
+                                if(typeof staticGameData.startingPlacements[stateMachine.playerOrder.length].villages['village_' + i]['player_' + stateMachine.playerOrder[j]][staticGameData.guilds[k].substr(0,1)] != 'undefined') {
                                     stateMachine['villages']['village_' + i]['player_' + stateMachine.playerOrder[j]][staticGameData.guilds[k].substr(0,1)] = 1;
+                                    console.log('Setting village ' + i + ' for player ' + stateMachine.playerOrder[j] + ' for guild ' + staticGameData.guilds[k]);
+
+                                    io.sockets.emit('_updateGuildShield', {
+                                        'village_id': i,
+                                        guild_id: k,
+                                        guildName: staticGameData.guilds[k],
+                                        player: stateMachine.playerOrder[j],
+                                        silent: true
+                                    });
                                 }
                             }
                         }

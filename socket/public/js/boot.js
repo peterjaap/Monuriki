@@ -100,10 +100,13 @@ function initGame() {
     });
 
     socket.on('_updateGameData', function(data) {
-        console.log(data);
-        shangrila.bridges = data.bridges;
-        shangrila.villages = data.villages;
-        stateMachine.villages = data.villages;
+        if(typeof data.bridges != 'undefined') {
+            shangrila.bridges = data.bridges;
+        }
+        if(typeof data.villages != 'undefined') {
+            shangrila.villages = data.villages;
+            stateMachine.villages = data.villages;
+        }
     });
 
     // Client functions

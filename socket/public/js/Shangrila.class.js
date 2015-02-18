@@ -500,8 +500,6 @@ Shangrila.prototype.drawBridges = function() {
         var height = stage.canvas.clientHeight * this.villageHeight;
 
         /* Get x and y positions for source and target villages from villages object */
-        console.log(i);
-        console.log(this.bridges[i]);
         from = this.villages[this.bridges[i]['from']];
         to = this.villages[this.bridges[i]['to']];
 
@@ -790,6 +788,7 @@ Shangrila.prototype.placeMaster = function(data, event) {
 };
 
 Shangrila.prototype.updateGuildShield = function(data) {
+    if(typeof data.silent == 'undefined') data.silent = false;
     var village = stage.getChildByName('village_' + data.village_id);
     var guildShapeSmall = stage.getChildByName('guild_shape_small_' + data.guild_id + '_' + data.village_id);
 
@@ -811,9 +810,13 @@ Shangrila.prototype.updateGuildShield = function(data) {
             amount.text = amount.amount;
         }
         // Show message
-        shangrila.showMessage('You have placed a ' + data.guildName + ' master in village ' + data.village_id);
+        if(!data.silent) {
+            shangrila.showMessage('You have placed a ' + data.guildName + ' master in village ' + data.village_id);
+        }
     } else {
-        shangrila.showMessage(data.player + ' has placed a ' + data.guildName + ' master in village ' + data.village_id);
+        if(!data.silent) {
+            shangrila.showMessage(data.player + ' has placed a ' + data.guildName + ' master in village ' + data.village_id);
+        }
     }
 };
 
