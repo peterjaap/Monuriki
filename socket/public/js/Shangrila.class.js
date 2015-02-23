@@ -414,19 +414,125 @@ Shangrila.prototype.drawMenu = function() {
             if(menuOptions[menuOption] == 'Place master') {
                 optionText.on('click', function (e) {
                     shangrila.chosenAction = 'place_master';
-                    alert('Click on an available tile to place your master.');
+                    shangrila.showMessage('Click on an available tile to place your master.');
                     stage.removeChild(stage.getChildByName('menuScreen'));
                 });
             } else if(menuOptions[menuOption] == 'Place students') {
                 optionText.on('click', function (e) {
                     shangrila.chosenAction = 'place_students';
-                    alert('Click on two of your masters to place two students.');
+                    shangrila.showMessage('Click on two of your masters to place two students.');
                     stage.removeChild(stage.getChildByName('menuScreen'));
                 });
             } else if(menuOptions[menuOption] == 'Move students') {
                 shangrila.chosenAction = 'move_students';
                 optionText.on('click', function (e) {
-                    alert('Choose the village from where you want to move your students, followed by the village where you want them to go.');
+                    shangrila.showMessage('Choose the village from where you want to move your students, followed by the village where you want them to go.');
+                    stage.removeChild(stage.getChildByName('menuScreen'));
+
+                    // Add click actions to the villages
+                    // Add visual effects to the villages
+                    for(i=0;i<13;i++) {
+                        village = stage.getChildByName('village_' + i);
+                        if(village) {
+                            // Increase village in size when hovering
+                            village.addEventListener('mouseover', function (e) {
+                                oldWidth = e.target.getBounds().width;
+                                oldHeight = e.target.getBounds().height;
+                                e.target.scaleX = e.target.scaleX * 1.1;
+                                e.target.scaleY = e.target.scaleY * 1.1;
+                                newWidth = e.target.getBounds().width;
+                                newHeight = e.target.getBounds().height;
+                                moveX = (newWidth - oldWidth) / 2;
+                                moveY = (newHeight - oldHeight) / 2;
+                                e.target.x += moveX;
+                                e.target.y += moveY;
+                            });
+                            // Back to original state
+                            village.addEventListener('mouseout', function (e) {
+                                oldWidth = e.target.getBounds().width;
+                                oldHeight = e.target.getBounds().height;
+                                e.target.scaleX = e.target.scaleX / 1.1;
+                                e.target.scaleY = e.target.scaleY / 1.1;
+                                newWidth = e.target.getBounds().width;
+                                newHeight = e.target.getBounds().height;
+                                moveX = (newWidth - oldWidth) / 2;
+                                moveY = (newHeight - oldHeight) / 2;
+                                e.target.x -= moveX;
+                                e.target.y -= moveY;
+                            });
+                            // When clicked, decide wether this is the 'from' or the 'to' village
+                            village.addEventListener('click', function (e) {
+                                if(this.fromVillage == null) {
+                                    numberOfStudentsForPlayer = 0;
+                                    // Check whether this player can initiate an attack from this village (needs at least 1 student there)
+                                    for(guild in stateMachine.villages['village_' + e.target.village_id]['player_' + shangrila.local_player]) {
+                                        if(stateMachine.villages['village_' + e.target.village_id]['player_' + shangrila.local_player][guild] > 1) {
+                                            numberOfStudentsForPlayer++;
+                                        }
+                                    }
+                                    if(numberOfStudentsForPlayer > 0) {
+                                        this.fromVillage = e.target.village_id;
+                                        shangrila.showMessage('Now choose the village you want to attack.');
+                                    } else {
+                                        shangrila.showMessage('You cannot initiate an attack from this village because you don\'t have students in this village.');
+                                    }
+                                } else if(this.fromVillage != null && this.toVillage == null) {
+                                    // TODO move this logic to the server side!
+                                    // Check whether this village is connected to the toVillage
+                                    if(shangrila.neighbours[this.fromVillage].indexOf(e.target.village_id) > 0) {
+                                        this.toVillage = e.target.village_id;
+                                        shangrila.showMessage('Village ' + this.fromVillage + ' attacks ' + this.toVillage);
+                                        // Remove all event listeners from all villages
+                                        for (i = 0; i < 13; i++) {
+                                            village = stage.getChildByName('village_' + i);
+                                            if (village) {
+                                                village.removeAllEventListeners();
+                                            }
+                                        }
+                                        // Calculate the winner of the attack
+                                        fromVillageObject = stage.getChildByName('village_' + this.fromVillage);
+                                        toVillageObject = stage.getChildByName('village_' + this.toVillage);
+                                        winner = false;
+                                        if((fromVillageObject.masters + fromVillageObject.students) > (toVillageObject.masters + toVillageObject.students)) {
+                                            winner = this.fromVillage;
+                                        } else if((fromVillageObject.masters + fromVillageObject.students) < (toVillageObject.masters + toVillageObject.students)) {
+                                            winner = this.toVillage;
+                                        } else if((fromVillageObject.masters + fromVillageObject.students) == (toVillageObject.masters + toVillageObject.students)) {
+                                            // In case of a draw, compare amount of masters
+                                            if(fromVillageObject.masters > toVillageObject.masters) {
+                                                winner = this.fromVillage;
+                                            } else if(fromVillageObject.masters < toVillageObject.masters) {
+                                                winner = this.toVillage;
+                                            } else if(fromVillageObject.masters == toVillageObject.masters) {
+                                                // Attacked village wins in case of a second draw (defensive advantage)
+                                                winner = this.toVillage;
+                                            }
+                                        }
+                                        if(winner) {
+                                            shangrila.showMessage('The winner of the attack is village ' + winner);
+                                        } else {
+                                            shangrila.showMessage('No winner has been decided. Does not compute. Computer says noooo.');
+                                        }
+
+                                        // Move students
+                                        // Decide on a per-guild basis who wins where
+
+                                        // Remove the bridge
+                                        socket.emit('__removeBridge', {
+                                            fromVillage: this.fromVillage,
+                                            toVillage: this.toVillage
+                                        });
+
+                                        // Reset local variables
+                                        this.toVillage = null;
+                                        this.fromVillage = null;
+                                    } else {
+                                        shangrila.showMessage('You can only attack a neighbouring village!');
+                                    }
+                                }
+                            });
+                        }
+                    }
                 });
             }
 
@@ -458,31 +564,8 @@ Shangrila.prototype.drawVillages = function() {
         village.name = 'village_' + i;
         village.masterTiles = {'blue': 0, 'red': 0, 'yellow': 0, 'violet': 0};
         village.studentTiles = {'blue': 0, 'red': 0, 'yellow': 0, 'violet': 0};
-
-        village.addEventListener('mouseover', function(e) {
-            oldWidth = e.target.getBounds().width;
-            oldHeight = e.target.getBounds().height;
-            e.target.scaleX = e.target.scaleX * 1.1;
-            e.target.scaleY = e.target.scaleY * 1.1;
-            newWidth = e.target.getBounds().width;
-            newHeight = e.target.getBounds().height;
-            moveX = (newWidth - oldWidth) / 2;
-            moveY = (newHeight - oldHeight) / 2;
-            e.target.x += moveX;
-            e.target.y += moveY;
-        });
-        village.addEventListener('mouseout', function(e) {
-            oldWidth = e.target.getBounds().width;
-            oldHeight = e.target.getBounds().height;
-            e.target.scaleX = e.target.scaleX / 1.1;
-            e.target.scaleY = e.target.scaleY / 1.1;
-            newWidth = e.target.getBounds().width;
-            newHeight = e.target.getBounds().height;
-            moveX = (newWidth - oldWidth) / 2;
-            moveY = (newHeight - oldHeight) / 2;
-            e.target.x -= moveX;
-            e.target.y -= moveY;
-        });
+        village.masters = 0;
+        village.students = 0;
 
         stage.addChild(village);
 
@@ -798,6 +881,14 @@ Shangrila.prototype.placeMaster = function(data, event) {
     }
 };
 
+Shangrila.prototype.moveStudents = function(data, event) {
+    if(data.player == shangrila.currentPlayer) {
+
+    } else {
+        shangrila.showMessage('It is not your turn! It is ' + shangrila.currentPlayer + '\'s turn!');
+    }
+};
+
 Shangrila.prototype.placeStudent = function(data, event) {
     if(data.player == shangrila.currentPlayer) {
         // A student can only be placed on a guild when the current player has exactly one master and 0 students in that village
@@ -851,7 +942,13 @@ Shangrila.prototype.updateGuildShield = function(data) {
         });
     }
 
-    village.masterTiles[data.player] += 1;
+    if(typeOfPlacing == 'student') {
+        village.studentTiles[data.player] += 1;
+        village.students += 1;
+    } else if(typeOfPlacing == 'master') {
+        village.masterTiles[data.player] += 1;
+        village.masters += 1;
+    }
 
     if(data.player == shangrila.local_player) {
         /* Update amount in sidebar */

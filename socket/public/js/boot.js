@@ -86,6 +86,7 @@ function initGame() {
         shangrila.villageWidth = staticGameData.villageWidth;
         shangrila.villageHeight = staticGameData.villageHeight;
         shangrila.bridges = staticGameData.bridges;
+        shangrila.neighbours = staticGameData.neighbours;
         shangrila.colorNames = staticGameData.colorNames;
         shangrila.colors = staticGameData.colors;
         shangrila.numberOfActiveMessages = staticGameData.numberOfActiveMessages;
@@ -136,7 +137,7 @@ function initGame() {
             if(index == 'currentPlayer') {
                 shangrila.updateCurrentPlayer();
             }
-            if(index == 'villages') {
+            if(index == 'villages' || index == 'neighbours') {
                 stateMachine[index] = data[index];
             }
         }

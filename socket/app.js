@@ -111,6 +111,21 @@ staticGameData.bridges[20] = {from:3, to:12};
 staticGameData.bridges[21] = {from:7, to:12};
 staticGameData.bridges[22] = {from:12, to:11};
 
+staticGameData.neighbours = [];
+staticGameData.neighbours[0] = [1,2,3,4];
+staticGameData.neighbours[1] = [0,2,4,6];
+staticGameData.neighbours[2] = [0,1,6];
+staticGameData.neighbours[3] = [0,7,12];
+staticGameData.neighbours[4] = [0,1,5,7];
+staticGameData.neighbours[5] = [4,6,8,9];
+staticGameData.neighbours[6] = [1,2,5,9];
+staticGameData.neighbours[7] = [3,4,8,11,12];
+staticGameData.neighbours[8] = [5,7,10];
+staticGameData.neighbours[9] = [5,6,10];
+staticGameData.neighbours[10] = [8,9,11];
+staticGameData.neighbours[11] = [7,10,12];
+staticGameData.neighbours[12] = [3,7,11];
+
 /* Define the colors that are used for the various players */
 /**
  *  - Red (Ro-Tarya)
@@ -286,6 +301,8 @@ for(i=0;i<staticGameData.villages.length;i++) {
         }
     }
 }
+stateMachine.studentsPlacedInThisRound = 0;
+stateMachine.neighbours = staticGameData.neighbours;
 
 // Log complete state machine
 function logSM() {
@@ -420,6 +437,55 @@ io.sockets.on('connection', function (socket) {
         io.sockets.emit('_updateStateMachineValue', {
             currentPlayer:stateMachine.currentPlayer
         });
+    });
+
+    // When a bridge has been removed, update stateMachine etc
+    socket.on('__removeBridge', function(data) {
+        // Do some checks whether this bridge still exists etc
+        // Remove the toVillage from the fromVillage's neighbours list
+        stateMachine.neighbours[data.fromVillage].remove(data.toVillage);
+        // Remove the fromVillage from the toVillage's neighbours list
+        stateMachine.neighbours[data.toVillage].remove(data.fromVillage);
+        // Update stateMachine
+        io.sockets.emit('_updateStateMachineValue', {
+            neighbours: stateMachine.neighbours
+        });
+        // Find bridge
+        bridge_id = false;
+        for(bridge in staticGameData.bridges) {
+            if(
+                staticGameData.bridges[bridge].from == data.fromVillage
+            &&
+                staticGameData.bridges[bridge].to == data.toVillage
+            ) {
+                bridge_id = bridge;
+            }
+        }
+        if(bridge_id) {
+            // Remove bridge
+            io.sockets.emit('_removeBridge', {
+                bridge_id: bridge_id
+            });
+
+            // Define who is next
+            index = stateMachine.playerOrder.indexOf(stateMachine.currentPlayer);
+            if(typeof index != 'undefined') {
+                if(typeof stateMachine.playerOrder[index+1] != 'undefined') {
+                    nextPlayer = stateMachine.playerOrder[index + 1];
+                } else {
+                    nextPlayer = stateMachine.playerOrder[0];
+                }
+                // Update counters
+                stateMachine.studentsPlacedInThisRound = 0;
+                // Update the state machine and the turn indicator
+                stateMachine.currentPlayer = nextPlayer;
+                io.sockets.emit('_updateStateMachineValue', {
+                    currentPlayer:stateMachine.currentPlayer
+                });
+            }
+        } else {
+            io.sockets.send('Somebody cheated! Game is voided.');
+        }
     });
 
     // When player has placed a master, update stateMachine etc
@@ -579,6 +645,7 @@ io.sockets.on('connection', function (socket) {
 
         // Keep track of how many students this round have been placed
         stateMachine.studentsPlacedInThisRound++;
+        console.log(stateMachine.studentsPlacedInThisRound);
 
         // If two, decide who is next
         if(stateMachine.studentsPlacedInThisRound >= 2) {
