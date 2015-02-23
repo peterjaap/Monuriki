@@ -5,6 +5,9 @@ The Bridges of Shangri-la is a board game created by Leo Colovini and published 
 As a fun exercise and to familiarize myself with building games in HTML5/JS, I've set out to recreate this game in a digital form pure as a hobby.
 
 ## Changelog
+### 23-02-2015
+I had moved development to a local repo, but decided to push to this repo every once in a while. I'm now at the point where a large part of the basic game mechanics work; I have to implement the 'Travel students' game action and after that it's polishing up. So I'd say I'm at about 50% right now. Might rebrand it into another theme, such as pirates or islands. Will revisit!
+
 ### 15-01-2014
 Found easelJS. Tried it, was convinced. Rewrote custom JS part in easelJS; object handling is awesome, as well as a preloader built in :)
 I've added village and bridge identification by adding a boolean to show a number on the object. I've also removed the HTML div for the controldeck and created the guild icons (now just with an initial) through easelJS as well.
