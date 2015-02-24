@@ -418,7 +418,8 @@ io.sockets.on('connection', function (socket) {
                                         guild_id: k,
                                         guildName: staticGameData.guilds[k],
                                         player: stateMachine.playerOrder[j],
-                                        silent: true
+                                        silent: true,
+                                        typeOfPlacing: 'master'
                                     });
                                 }
                             }
@@ -490,7 +491,7 @@ io.sockets.on('connection', function (socket) {
 
     // When player has placed a master, update stateMachine etc
     socket.on('__placeMaster', function(data) {
-        logSM();
+        data.typeOfPlacing = 'master';
         if(data.village_id == 'auto' && stateMachine.setupRound) {
             // Auto placement for debugging purposes; choose village & guild automatically
             canPlaceTile = false;
@@ -625,6 +626,7 @@ io.sockets.on('connection', function (socket) {
 
     // When player has placed a student, update stateMachine etc
     socket.on('__placeStudent', function(data) {
+        data.typeOfPlacing = 'student';
         // check if placing a student is even possible
         mastersOnGuild = stateMachine.villages['village_' + data.village_id]['player_' + data.player][data.guildName.substr(0,1)];
         if(mastersOnGuild != 1) {

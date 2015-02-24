@@ -778,6 +778,7 @@ Shangrila.prototype.drawGuildShields = function() {
                 guildWidthSmall,
                 guildHeightSmall
             ).endFill();
+
             var guildShapeSmall = new createjs.Shape(guildSmall);
             guildShapeSmall.setBounds(x,y,guildWidthSmall,guildHeightSmall);
             guildShapeSmall.name = 'guild_shape_small_' + i + '_' + j;
@@ -785,20 +786,24 @@ Shangrila.prototype.drawGuildShields = function() {
             guildShapeSmall.guild_id = i;
             guildShapeSmall.village_id = j;
             guildShapeSmall.addEventListener('mouseover', function(event) {
-               event.target.graphics.beginFill(shangrila.local_player).rect(
-                   event.target.getBounds().x,
-                   event.target.getBounds().y,
-                   event.target.getBounds().width,
-                   event.target.getBounds().height
-               ).endFill();
+                if(shangrila.chosenAction == 'place_master') {
+                    event.target.graphics.beginFill(shangrila.local_player).rect(
+                        event.target.getBounds().x,
+                        event.target.getBounds().y,
+                        event.target.getBounds().width,
+                        event.target.getBounds().height
+                    ).endFill();
+                }
             });
             guildShapeSmall.addEventListener('mouseout', function(event) {
-                event.target.graphics.beginFill('lightgrey').rect(
-                    event.target.getBounds().x,
-                    event.target.getBounds().y,
-                    event.target.getBounds().width,
-                    event.target.getBounds().height
-                ).endFill();
+                if(shangrila.chosenAction == 'place_master') {
+                    event.target.graphics.beginFill('lightgrey').rect(
+                        event.target.getBounds().x,
+                        event.target.getBounds().y,
+                        event.target.getBounds().width,
+                        event.target.getBounds().height
+                    ).endFill();
+                }
             });
             guildShapeSmall.addEventListener('click', function(event) {
                 if(shangrila.chosenAction == 'place_master') {
@@ -913,23 +918,33 @@ Shangrila.prototype.updateGuildShield = function(data) {
     var village = stage.getChildByName('village_' + data.village_id);
     var guildShapeSmall = stage.getChildByName('guild_shape_small_' + data.guild_id + '_' + data.village_id);
 
-    guildShapeSmall.graphics.beginFill(data.player).rect(
-        guildShapeSmall.getBounds().x,
-        guildShapeSmall.getBounds().y,
-        guildShapeSmall.getBounds().width,
-        guildShapeSmall.getBounds().height
-    ).endFill();
+    mastersOnGuild = stateMachine.villages['village_' + data.village_id]['player_' + data.player][data.guildName.substr(0,1)];
+
+    if(data.typeOfPlacing == 'master') {
+        guildShapeSmall.graphics.beginFill(data.player).rect(
+            guildShapeSmall.getBounds().x,
+            guildShapeSmall.getBounds().y,
+            guildShapeSmall.getBounds().width,
+            guildShapeSmall.getBounds().height
+        ).endFill();
+    } else if(data.typeOfPlacing == 'student') {
+        x = guildShapeSmall.getBounds().x;
+        y = guildShapeSmall.getBounds().y;
+        guildWidthSmall = guildShapeSmall.getBounds().width;
+        guildHeightSmall = guildShapeSmall.getBounds().height;
+
+        line2 = new createjs.Shape();
+        line2.graphics.beginStroke('#666').setStrokeStyle(1).moveTo(x,y).lineTo((x+guildWidthSmall),(y+guildHeightSmall)).endStroke();
+        stage.addChild(line2);
+
+        line2 = new createjs.Shape();
+        line2.graphics.beginStroke('#666').setStrokeStyle(1).moveTo(x,(y+guildHeightSmall)).lineTo((x+guildWidthSmall),y).endStroke();
+        stage.addChild(line2);
+    }
 
     guildShapeSmall.removeAllEventListeners();
 
-    mastersOnGuild = stateMachine.villages['village_' + data.village_id]['player_' + data.player][data.guildName.substr(0,1)];
-    if(mastersOnGuild > 1) {
-        typeOfPlacing = 'student';
-    } else {
-        typeOfPlacing = 'master';
-    }
-
-    if(mastersOnGuild <= 1) {
+    if(data.typeOfPlacing == 'master') {
         guildShapeSmall.addEventListener('click', function (event) {
             if (shangrila.chosenAction == 'place_students') {
                 shangrila.placeStudent({
@@ -942,10 +957,10 @@ Shangrila.prototype.updateGuildShield = function(data) {
         });
     }
 
-    if(typeOfPlacing == 'student') {
+    if(data.typeOfPlacing == 'student') {
         village.studentTiles[data.player] += 1;
         village.students += 1;
-    } else if(typeOfPlacing == 'master') {
+    } else if(data.typeOfPlacing == 'master') {
         village.masterTiles[data.player] += 1;
         village.masters += 1;
     }
@@ -959,11 +974,11 @@ Shangrila.prototype.updateGuildShield = function(data) {
         }
         // Show message
         if(!data.silent) {
-            shangrila.showMessage('You have placed a ' + data.guildName + ' ' + typeOfPlacing + ' in village ' + data.village_id);
+            shangrila.showMessage('You have placed a ' + data.guildName + ' ' + data.typeOfPlacing + ' in village ' + data.village_id);
         }
     } else {
         if(!data.silent) {
-            shangrila.showMessage(data.player + ' has placed a ' + data.guildName + ' ' + typeOfPlacing + ' in village ' + data.village_id);
+            shangrila.showMessage(data.player + ' has placed a ' + data.guildName + ' ' + data.typeOfPlacing + ' in village ' + data.village_id);
         }
     }
 };
