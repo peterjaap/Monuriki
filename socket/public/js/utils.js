@@ -7,6 +7,16 @@ Array.prototype.random = function () {
     return this[Math.floor((Math.random()*this.length))];
 }
 
+function getRandBinary()
+{
+    return (Math.floor(Math.random() * 9) % 2);
+}
+
+function randomIntFromInterval(min,max)
+{
+    return Math.floor(Math.random()*(max-min+1)+min);
+}
+
 Array.prototype.remove = function() {
     var what, a = arguments, L = a.length, ax;
     while (L && this.length) {

@@ -72,10 +72,10 @@ Shangrila.prototype.splashScreen = function() {
     backdrop.scaleY = stage.canvas.height / backdrop.getBounds().height;
     splashContainer.addChild(backdrop);
 
-    var title = new createjs.Text('The Bridges of Shangrila',(stage.canvas.width * 0.06) + 'px Arial','black');
+    var title = new createjs.Text('Monuriki',(stage.canvas.width * 0.06) + 'px Arial','black');
     bounds = title.getBounds();
     title.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
-    title.y = stage.canvas.height * 0.25;
+    title.y = stage.canvas.height * 0.20;
     splashContainer.addChild(title);
 
     var chosenColors = [];
@@ -95,7 +95,7 @@ Shangrila.prototype.splashScreen = function() {
         var subtitle = new createjs.Text('Choose your color',(stage.canvas.width * 0.03) + 'px Arial','black');
         bounds = subtitle.getBounds();
         subtitle.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
-        subtitle.y = stage.canvas.height * 0.40;
+        subtitle.y = stage.canvas.height * 0.55;
         splashContainer.addChild(subtitle);
 
         /* Walk through the colors to display their button */
@@ -107,7 +107,7 @@ Shangrila.prototype.splashScreen = function() {
             // Create button
             var startButton = new createjs.Graphics().beginFill(colorName).rect(
                 (stage.canvas.width * 0.08) + ((stage.canvas.width * 0.5) - (((stage.canvas.width * 0.06) + (stage.canvas.width * 0.02)) * i)),
-                title.y * 2,
+                title.y * 1.9,
                 (stage.canvas.width * 0.06),
                 (stage.canvas.width * 0.06)
             );
@@ -178,7 +178,7 @@ Shangrila.prototype.lobby = function() {
     backdrop.scaleY = stage.canvas.height / backdrop.getBounds().height;
     lobbyContainer.addChild(backdrop);
 
-    var title = new createjs.Text('The Bridges of Shangrila Lobby',(stage.canvas.width * 0.03) + 'px Arial','black');
+    var title = new createjs.Text('Monuriki lobby',(stage.canvas.width * 0.03) + 'px Arial','black');
     bounds = title.getBounds();
     title.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
     title.y = stage.canvas.height * 0.25;
@@ -607,8 +607,10 @@ Shangrila.prototype.drawBridges = function() {
         var height = stage.canvas.clientHeight * this.villageHeight;
 
         /* Get x and y positions for source and target villages from villages object */
-        from = this.villages[this.bridges[i]['from']];
-        to = this.villages[this.bridges[i]['to']];
+        fromVillageId = this.bridges[i]['from'];
+        toVillageId = this.bridges[i]['to'];
+        from = this.villages[fromVillageId];
+        to = this.villages[toVillageId];
 
         var from_x = shangrila.gameboardWidth * (from['left']/100) + width/2;
         var from_y = stage.canvas.clientHeight * (from['top']/100) + height/2;
@@ -616,13 +618,38 @@ Shangrila.prototype.drawBridges = function() {
         var to_x = shangrila.gameboardWidth * (to['left']/100) + width/2;
         var to_y = stage.canvas.clientHeight * (to['top']/100) + height/2;
 
+        if(fromVillageId == 1 && toVillageId == 6) {
+            curveStrength = 0.25;
+            var qcto_x = (from_x + to_x) / 2 + (Math.abs(from_x - to_x) * curveStrength);
+            var qcto_y = (from_y + to_y) / 2 - (Math.abs(from_y - to_y) * curveStrength);
+        } else if(fromVillageId == 3 && toVillageId == 12) {
+            curveStrength = 0.6;
+            var qcto_x = (from_x + to_x) / 2 - (Math.abs(from_x - to_x) * curveStrength);
+            var qcto_y = (from_y + to_y) / 2 + (Math.abs(from_y - to_y) * curveStrength);
+        } else {
+            // Randomize curving
+            curveStrength = (randomIntFromInterval(3, 7) / 10);
+            if (getRandBinary()) {
+                var qcto_x = (from_x + to_x) / 2 + (Math.abs(from_x - to_x) * curveStrength);
+            } else {
+                var qcto_x = (from_x + to_x) / 2 - (Math.abs(from_x - to_x) * curveStrength);
+            }
+            curveStrength = (randomIntFromInterval(3, 7) / 10);
+            if (getRandBinary()) {
+                var qcto_y = (from_y + to_y) / 2 + (Math.abs(from_y - to_y) * curveStrength);
+            } else {
+                var qcto_y = (from_y + to_y) / 2 - (Math.abs(from_y - to_y) * curveStrength);
+            }
+        }
+
         /* Draw line */
         var bridge = new createjs.Shape();
         bridge.graphics.setStrokeStyle(5);
         bridge.graphics.beginStroke('#000');
 
         bridge.graphics.moveTo(from_x,from_y);
-        bridge.graphics.lineTo(to_x,to_y);
+        bridge.graphics.quadraticCurveTo(qcto_x, qcto_y, to_x, to_y);
+        //bridge.graphics.lineTo(to_x,to_y);
         bridge.graphics.endStroke();
         bridge.bridge_id = i;
         bridge.name = 'bridge_' + i;

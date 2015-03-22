@@ -75,10 +75,10 @@ staticGameData.villages[5] = {top:49, left:36 };
 staticGameData.villages[6] = {top:70, left:36 };
 staticGameData.villages[7] = {top:21, left:59 };
 staticGameData.villages[8] = {top:38, left:56 };
-staticGameData.villages[9] = {top:65, left:54 };
-staticGameData.villages[10] = {top:57, left:70 };
-staticGameData.villages[11] = {top:40, left:75 };
-staticGameData.villages[12] = {top:9, left:73 };
+staticGameData.villages[9] = {top:60, left:54 };
+staticGameData.villages[10] = {top:65, left:70 };
+staticGameData.villages[11] = {top:50, left:75 };
+staticGameData.villages[12] = {top:30, left:73 };
 
 staticGameData.villageWidth = 0.12;
 staticGameData.villageHeight = 0.12;
