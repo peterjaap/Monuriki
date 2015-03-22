@@ -6,7 +6,7 @@ As a fun exercise and to familiarize myself with building games in HTML5/JS, I'v
 
 # Screenshots
 These are obviously screenshots from the devving-in-progress stage.
-![startscreen](https://cloud.githubusercontent.com/assets/431360/6769014/1aeeb95c-d089-11e4-8eeb-46cc4ab7512d.png)
+![screenshot 2015-03-22 14 36 32](https://cloud.githubusercontent.com/assets/431360/6769551/de7c65c4-d0a0-11e4-97dc-bdc6a2cf4493.png)
 ![in-game](https://cloud.githubusercontent.com/assets/431360/6769013/18e19fda-d089-11e4-9001-8396f1c7e136.png)
 # Older screenshots
 ![screenshot 2015-02-23 23 15 27](https://cloud.githubusercontent.com/assets/431360/6338732/44ef302a-bbb1-11e4-8fe7-304ac6b90ff9.png)
