@@ -15,7 +15,7 @@ Shangrila.prototype.setupSpeechRecognition = function() {
         // Let's define our first command. First the text we expect, and then the function it should call
         var commands = {
             'i want to play with :color': function(color) {
-                if(color == 'blue' || color == 'red' || color == 'pink' || color == 'yellow') {
+                if(color == 'blue' || color == 'red' || color == 'pink' || color == 'green') {
                     shangrila.local_player = color;
                     shangrila.inSplash = false;
                     shangrila.inLobby = true;
@@ -75,7 +75,7 @@ Shangrila.prototype.splashScreen = function() {
     var title = new createjs.Text('Monuriki',(stage.canvas.width * 0.06) + 'px Arial','black');
     bounds = title.getBounds();
     title.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
-    title.y = stage.canvas.height * 0.20;
+    title.y = stage.canvas.height * 0.15;
     splashContainer.addChild(title);
 
     var chosenColors = [];
@@ -92,10 +92,10 @@ Shangrila.prototype.splashScreen = function() {
         splashContainer.addChild(fullNotice);
     } else {
         /* Show choose color notice */
-        var subtitle = new createjs.Text('Choose your color',(stage.canvas.width * 0.03) + 'px Arial','black');
+        var subtitle = new createjs.Text('Choose your character',(stage.canvas.width * 0.03) + 'px Arial','white');
         bounds = subtitle.getBounds();
         subtitle.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
-        subtitle.y = stage.canvas.height * 0.55;
+        subtitle.y = stage.canvas.height * 0.7;
         splashContainer.addChild(subtitle);
 
         /* Walk through the colors to display their button */
@@ -105,7 +105,7 @@ Shangrila.prototype.splashScreen = function() {
             if (chosenColors.indexOf(colorName) > -1) continue;
 
             // Create button
-            var startButton = new createjs.Graphics().beginFill(colorName).rect(
+            /*var startButton = new createjs.Graphics().beginFill(colorName).rect(
                 (stage.canvas.width * 0.08) + ((stage.canvas.width * 0.5) - (((stage.canvas.width * 0.06) + (stage.canvas.width * 0.02)) * i)),
                 title.y * 1.9,
                 (stage.canvas.width * 0.06),
@@ -120,10 +120,28 @@ Shangrila.prototype.splashScreen = function() {
             });
             startButtonShape.addEventListener('mouseout', function (event) {
                 event.target.alpha = 1;
+            });*/
+            var character = new createjs.Bitmap(loader.getResult('character-' + colorName));
+            character.x = (stage.canvas.width * 0.12) + ((stage.canvas.width * 0.5) - (((stage.canvas.width * 0.06) + (stage.canvas.width * 0.04)) * i));
+            character.y = title.y * 2.2;
+            character.scaleX = 0.8;
+            character.scaleY = 0.8;
+            character.alpha = 0.8;
+            character.color = colorName;
 
+            character.addEventListener('mouseover', function (event) {
+                event.target.scaleX = 0.9;
+                event.target.scaleY = 0.9;
+                event.target.alpha = 1;
             });
+            character.addEventListener('mouseout', function (event) {
+                event.target.scaleX = 0.8;
+                event.target.scaleY = 0.8;
+                event.target.alpha = 0.8;
+            });
+
             // Set action to perform when clicked
-            startButtonShape.addEventListener('click', function (event) {
+            character.addEventListener('click', function (event) {
                 shangrila.local_player = event.target.color;
                 shangrila.inSplash = false;
                 shangrila.inLobby = true;
@@ -131,7 +149,7 @@ Shangrila.prototype.splashScreen = function() {
                 shangrila.showMessage('Welcome to the lobby, player ' + shangrila.local_player);
             });
             // Add button to the stage
-            splashContainer.addChild(startButtonShape);
+            splashContainer.addChild(character);
         }
     }
 
@@ -582,8 +600,8 @@ Shangrila.prototype.drawVillages = function() {
         village.scaleY = height / bounds.height;
         village.village_id = i;
         village.name = 'village_' + i;
-        village.masterTiles = {'blue': 0, 'red': 0, 'yellow': 0, 'violet': 0};
-        village.studentTiles = {'blue': 0, 'red': 0, 'yellow': 0, 'violet': 0};
+        village.masterTiles = {'blue': 0, 'red': 0, 'green': 0, 'violet': 0};
+        village.studentTiles = {'blue': 0, 'red': 0, 'green': 0, 'violet': 0};
         village.masters = 0;
         village.students = 0;
 
