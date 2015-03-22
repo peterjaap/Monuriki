@@ -66,18 +66,18 @@ staticGameData.guilds = ['Healer','Dragonbreather','Firekeeper','Priest','Rainma
 
 /* Define positions of villages */
 staticGameData.villages = [];
-staticGameData.villages[0] = {top:5,left:8 };
-staticGameData.villages[1] = {top:36, left:14 };
-staticGameData.villages[2] = {top:64, left:6 };
-staticGameData.villages[3] = {top:5, left:43 };
-staticGameData.villages[4] = {top:23, left:33 };
+staticGameData.villages[0] = {top:14,left:22 };
+staticGameData.villages[1] = {top:34, left:12 };
+staticGameData.villages[2] = {top:60, left:18 };
+staticGameData.villages[3] = {top:16, left:43 };
+staticGameData.villages[4] = {top:30, left:33 };
 staticGameData.villages[5] = {top:49, left:36 };
-staticGameData.villages[6] = {top:79, left:28 };
+staticGameData.villages[6] = {top:70, left:36 };
 staticGameData.villages[7] = {top:21, left:59 };
 staticGameData.villages[8] = {top:38, left:56 };
-staticGameData.villages[9] = {top:78, left:74 };
+staticGameData.villages[9] = {top:65, left:54 };
 staticGameData.villages[10] = {top:57, left:70 };
-staticGameData.villages[11] = {top:40, left:77 };
+staticGameData.villages[11] = {top:40, left:75 };
 staticGameData.villages[12] = {top:9, left:73 };
 
 staticGameData.villageWidth = 0.12;
@@ -468,6 +468,9 @@ io.sockets.on('connection', function (socket) {
             io.sockets.emit('_removeBridge', {
                 bridge_id: bridge_id
             });
+
+            // Move students
+
 
             // Define who is next
             index = stateMachine.playerOrder.indexOf(stateMachine.currentPlayer);

@@ -65,6 +65,13 @@ Shangrila.prototype.splashScreen = function() {
 
     var splashContainer = new createjs.Container();
 
+    var backdrop = new createjs.Bitmap(loader.getResult('backdrop'));
+    backdrop.x = 0;
+    backdrop.y = 0;
+    backdrop.scaleX = stage.canvas.width / backdrop.getBounds().width;
+    backdrop.scaleY = stage.canvas.height / backdrop.getBounds().height;
+    splashContainer.addChild(backdrop);
+
     var title = new createjs.Text('The Bridges of Shangrila',(stage.canvas.width * 0.06) + 'px Arial','black');
     bounds = title.getBounds();
     title.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
@@ -163,6 +170,13 @@ Shangrila.prototype.lobby = function() {
     }
 
     var lobbyContainer = new createjs.Container();
+
+    var backdrop = new createjs.Bitmap(loader.getResult('backdrop'));
+    backdrop.x = 0;
+    backdrop.y = 0;
+    backdrop.scaleX = stage.canvas.width / backdrop.getBounds().width;
+    backdrop.scaleY = stage.canvas.height / backdrop.getBounds().height;
+    lobbyContainer.addChild(backdrop);
 
     var title = new createjs.Text('The Bridges of Shangrila Lobby',(stage.canvas.width * 0.03) + 'px Arial','black');
     bounds = title.getBounds();
@@ -309,9 +323,15 @@ Shangrila.prototype.initNewGame = function() {
     this.controldeckWidth = stage.canvas.width*0.2;
 
     /* Draw background game board */
-    var graphicsGamecanvas = new createjs.Graphics().beginFill(this.colors[shangrila.local_player]['gamecanvasBackground']).rect(0, 0, this.gameboardWidth, stage.canvas.height);
+    /*var graphicsGamecanvas = new createjs.Graphics().beginFill(this.colors[shangrila.local_player]['gamecanvasBackground']).rect(0, 0, this.gameboardWidth, stage.canvas.height);
     var backgroundGamecanvas = new createjs.Shape(graphicsGamecanvas);
     backgroundGamecanvas.name = 'backgroundGamecanvas';
+    stage.addChild(backgroundGamecanvas);*/
+    var backgroundGamecanvas = new createjs.Bitmap(loader.getResult('game_backdrop'));
+    backgroundGamecanvas.x = 0;
+    backgroundGamecanvas.y = 0;
+    backgroundGamecanvas.scaleX = this.gameboardWidth / backgroundGamecanvas.getBounds().width;
+    backgroundGamecanvas.scaleY = stage.canvas.height / backgroundGamecanvas.getBounds().height;
     stage.addChild(backgroundGamecanvas);
 
     /* Draw background control deck */

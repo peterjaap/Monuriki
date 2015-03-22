@@ -6,7 +6,7 @@ var stage = false;
 var loader;
 var shangrila;
 
-var identify = true;
+var identify = false;
 var keepAspectRatio = true;
 var initialWidth;
 var initialHeight;
@@ -47,7 +47,10 @@ document.addEventListener('DOMContentLoaded', function(){
             {id:'mic_red', src:'images/mic_red.png'},
             {id:'mic_green', src:'images/mic_green.png'},
             {id:'sound_on', src:'images/sound_on.png'},
-            {id:'sound_off', src:'images/sound_off.png'}
+            {id:'sound_off', src:'images/sound_off.png'},
+            {id:'backdrop', src:'images/backdrop.jpg'},
+            {id:'game_backdrop', src:'images/bigger-island.jpg'},
+            {id:'menu_background', src:'images/sheet_paper_background.png'}
         ]
     );
 
