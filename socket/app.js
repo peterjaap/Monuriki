@@ -1,10 +1,5 @@
 /* This file is the actual game server; it holds all the game information in the state machine and sends
    updates to the various clients
-
-   TODO:
-   - apply consistency in how to identify players; through their client ID or their color? activePlayers vs activePlayersColors
-   - for client; decide where to save game data - in shangrila object or in stateMachine object
-   - replace incremental stateMachine update with full stateMachine update to secure single source of truth and eliminate cheating
  * */
 
 var fs = require('fs');
@@ -14,6 +9,11 @@ var app = express();
 var util = require("util");
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.get('/', function(req, res) {
+    fs.readFile(__dirname + '/public/index.html', 'utf8', function(err, text){
+        res.send(text);
+    });
+});
 
 // Run server
 var server = app.listen(8000);
@@ -455,10 +455,11 @@ io.sockets.on('connection', function (socket) {
         bridge_id = false;
         for(bridge in staticGameData.bridges) {
             if(
-                staticGameData.bridges[bridge].from == data.fromVillage
-            &&
-                staticGameData.bridges[bridge].to == data.toVillage
-            ) {
+                (staticGameData.bridges[bridge].from == data.fromVillage && staticGameData.bridges[bridge].to == data.toVillage)
+                ||
+                (staticGameData.bridges[bridge].to == data.fromVillage && staticGameData.bridges[bridge].from == data.toVillage)
+            )
+            {
                 bridge_id = bridge;
             }
         }
