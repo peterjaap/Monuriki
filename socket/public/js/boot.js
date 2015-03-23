@@ -54,7 +54,11 @@ document.addEventListener('DOMContentLoaded', function(){
             {id:'character-red', src:'images/character-red.png'},
             {id:'character-green', src:'images/character-green.png'},
             {id:'character-blue', src:'images/character-blue.png'},
-            {id:'character-violet', src:'images/character-violet.png'}
+            {id:'character-violet', src:'images/character-violet.png'},
+            {id:'shield-red', src:'images/shield-red.png'},
+            {id:'shield-green', src:'images/shield-green.png'},
+            {id:'shield-blue', src:'images/shield-blue.png'},
+            {id:'shield-violet', src:'images/shield-violet.png'}
         ]
     );
 

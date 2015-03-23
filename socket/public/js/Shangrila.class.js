@@ -769,13 +769,18 @@ Shangrila.prototype.drawGuildShields = function() {
 
         /* Draw guilds on the controldeck */
         /* Set square background for guild shield */
-        var guild = new createjs.Graphics().beginFill('black').rect(
+        /*var guild = new createjs.Graphics().beginFill('black').rect(
             x,
             y,
             guildWidth,
             guildHeight
         );
-        var guildShape = new createjs.Shape(guild);
+        var guildShape = new createjs.Shape(guild);*/
+        var guildShape = new createjs.Bitmap(loader.getResult('shield-' + shangrila.local_player));
+        guildShape.x = x;
+        guildShape.y = y;
+        guildShape.scaleX = guildWidth / guildShape.getBounds().width;
+        guildShape.scaleY = guildShape.scaleX;
         guildShape.addEventListener('mouseover', function(event) {
             event.target.alpha = .50;
         });
@@ -784,20 +789,10 @@ Shangrila.prototype.drawGuildShields = function() {
         });
         stage.addChild(guildShape);
 
-        /* Set amount on top of guild shield */
-        var guildAmount = new createjs.Graphics().beginFill('grey').rect(
-            x,
-            y+guildHeight,
-            guildWidth,
-            guildHeight*0.6
-        );
-        var guildAmountShape = new createjs.Shape(guildAmount);
-        stage.addChild(guildAmountShape);
-
         /* Set inital (D for Dragonbreather, etc) */
         var initial = new createjs.Text(guildName.substr(0,1),(guildWidth / 2) + 'px Arial','#fff');
         initial.x = x+guildWidth*0.30;
-        initial.y = y+guildHeight*0.70;
+        initial.y = guildShape.y + (guildShape.getTransformedBounds().height * 0.5);
         initial.textBaseline = 'alphabetic';
         initial.name = 'guild_initial_blue_'  + guildName.substr(0,1);
         stage.addChild(initial);
@@ -806,7 +801,7 @@ Shangrila.prototype.drawGuildShields = function() {
             if(shangrila.colorNames[n] == shangrila.local_player) {
                 var amount = new createjs.Text('AMOUNT', (guildWidth / 3) + 'px Arial', '#fff');
                 amount.x = x + guildWidth * 0.4;
-                amount.y = y + guildHeight * 1.43;
+                amount.y = guildShape.y + (guildShape.getTransformedBounds().height * 0.8);
                 amount.amount = 6;
                 amount.text = amount.amount;
                 amount.textBaseline = 'alphabetic';
