@@ -1,6 +1,6 @@
-# Monukiri HTML5/JS version
+# Monuriki HTML5/JS version
 
-Monukiri is a digital board game and is based on The Bridges of Shangrila. This is a board game created by Leo Colovini and published by 999 Games (amongst others). More info is available on [Boardgamegeek.com](http://boardgamegeek.com/boardgame/8190/the-bridges-of-Shangrila).
+Monuriki is a digital board game and is based on The Bridges of Shangrila. This is a board game created by Leo Colovini and published by 999 Games (amongst others). More info is available on [Boardgamegeek.com](http://boardgamegeek.com/boardgame/8190/the-bridges-of-Shangrila).
 
 As a fun exercise and to familiarize myself with building games in HTML5/JS, I've set out to create this game in a digital form pure as a hobby.
 
