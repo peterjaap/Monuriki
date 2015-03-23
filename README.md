@@ -22,7 +22,7 @@ These are obviously screenshots from the devving-in-progress stage.
 I had moved development to a local repo, but decided to push to this repo every once in a while. I'm now at the point where a large part of the basic game mechanics work; I have to implement the 'Travel students' game action and after that it's polishing up. So I'd say I'm at about 50% right now. Might rebrand it into another theme, such as pirates or islands. Will revisit! And I know, the code is nasty. Major refactoring needed concerning the server & client side events, the variables being pushed between the client and the server and the places where these variables are stored (now in staticGameData, stateMachine, the Shangrila object and bitmap objects on the stage -- it's a mess).
 
 ### 15-01-2014
-Found easelJS. Tried it, was convinced. Rewrote custom JS part in easelJS; object handling is awesome, as well as a preloader built in :)
+Found [createJS](http://www.createjs.com). Tried it, was convinced. Rewrote custom JS part in easelJS; object handling is awesome, as well as a preloader built in :)
 I've added village and bridge identification by adding a boolean to show a number on the object. I've also removed the HTML div for the controldeck and created the guild icons (now just with an initial) through easelJS as well.
 
 For the time being, you can delete the bridges by clicking on it. Once all bridges to a village have been burned, the stone of the wise men is automatically placed on that city.
