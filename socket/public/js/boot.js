@@ -6,7 +6,7 @@ var stage = false;
 var loader;
 var shangrila;
 
-var identify = false;
+var identify = true;
 var keepAspectRatio = true;
 var initialWidth;
 var initialHeight;
@@ -65,6 +65,23 @@ document.addEventListener('DOMContentLoaded', function(){
      loader.on('complete', function () { socket.emit('__showSplashScreen'); });
 });
 
+document.onkeyup = function (event) {
+    if(event.keyCode == 73) {
+        for(i=0;i<13;i++) {
+            object = stage.getChildByName('identify_village_' + i);
+            if(object) {
+                object.visible = !object.visible;
+            }
+        }
+        for(i=0;i<25;i++) {
+            object = stage.getChildByName('identify_broidge_' + i);
+            if(object) {
+                object.visible = !object.visible;
+            }
+        }
+    }
+}
+
 /* Initialize stage, set canvas width & height, retrieve game data and insert them into the game object */
 function initGame() {
     stage = new createjs.Stage('gamecanvas');
@@ -89,10 +106,10 @@ function initGame() {
         shangrila.inLobby = false;
         shangrila.inSplash = true;
         shangrila.guilds = staticGameData.guilds;
-        shangrila.villages = staticGameData.villages;
+        shangrila.villages = staticGameData.villagePositions;
         shangrila.villageWidth = staticGameData.villageWidth;
         shangrila.villageHeight = staticGameData.villageHeight;
-        shangrila.bridges = staticGameData.bridges;
+        shangrila.bridges = staticGameData.bridgePositions;
         shangrila.neighbours = staticGameData.neighbours;
         shangrila.colorNames = staticGameData.colorNames;
         shangrila.colors = staticGameData.colors;

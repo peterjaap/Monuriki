@@ -72,10 +72,10 @@ Shangrila.prototype.splashScreen = function() {
     backdrop.scaleY = stage.canvas.height / backdrop.getBounds().height;
     splashContainer.addChild(backdrop);
 
-    var title = new createjs.Text('Monuriki',(stage.canvas.width * 0.06) + 'px Arial','black');
+    var title = new createjs.Text('Monuriki',(stage.canvas.width * 0.07) + 'px Freckle Face','black');
     bounds = title.getBounds();
-    title.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
-    title.y = stage.canvas.height * 0.15;
+    title.x = (stage.canvas.width * 0.53) - (bounds.width / 2);
+    title.y = stage.canvas.height * 0.14;
     splashContainer.addChild(title);
 
     var chosenColors = [];
@@ -92,9 +92,9 @@ Shangrila.prototype.splashScreen = function() {
         splashContainer.addChild(fullNotice);
     } else {
         /* Show choose color notice */
-        var subtitle = new createjs.Text('Choose your character',(stage.canvas.width * 0.03) + 'px Arial','white');
+        var subtitle = new createjs.Text('Choose your character',(stage.canvas.width * 0.03) + 'px Freckle Face','white');
         bounds = subtitle.getBounds();
-        subtitle.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
+        subtitle.x = (stage.canvas.width * 0.52) - (bounds.width / 2);
         subtitle.y = stage.canvas.height * 0.7;
         splashContainer.addChild(subtitle);
 
@@ -196,7 +196,7 @@ Shangrila.prototype.lobby = function() {
     backdrop.scaleY = stage.canvas.height / backdrop.getBounds().height;
     lobbyContainer.addChild(backdrop);
 
-    var title = new createjs.Text('Monuriki lobby',(stage.canvas.width * 0.03) + 'px Arial','black');
+    var title = new createjs.Text('Monuriki lobby',(stage.canvas.width * 0.03) + 'px Freckle Face','black');
     bounds = title.getBounds();
     title.x = (stage.canvas.width * 0.5) - (bounds.width / 2);
     title.y = stage.canvas.height * 0.25;
@@ -264,7 +264,7 @@ Shangrila.prototype.lobby = function() {
         });
         // Set action to perform when clicked
         startButtonShape.addEventListener('click', function(event) {
-            socket.emit('__initNewGame');
+            socket.emit('__initNewGame', {presetStartingPositions:shangrila.presetStartingPositions});
         });
 
         lobbyContainer.addChild(startButtonShape);
@@ -318,6 +318,7 @@ Shangrila.prototype.lobby = function() {
                 checkboxWidth,
                 checkboxHeight
             ).endFill();
+            shangrila.presetStartingPositions = !shangrila.presetStartingPositions;
         });
         lobbyContainer.addChild(checkboxShape);
     }
@@ -341,10 +342,6 @@ Shangrila.prototype.initNewGame = function() {
     this.controldeckWidth = stage.canvas.width*0.2;
 
     /* Draw background game board */
-    /*var graphicsGamecanvas = new createjs.Graphics().beginFill(this.colors[shangrila.local_player]['gamecanvasBackground']).rect(0, 0, this.gameboardWidth, stage.canvas.height);
-    var backgroundGamecanvas = new createjs.Shape(graphicsGamecanvas);
-    backgroundGamecanvas.name = 'backgroundGamecanvas';
-    stage.addChild(backgroundGamecanvas);*/
     var backgroundGamecanvas = new createjs.Bitmap(loader.getResult('game_backdrop'));
     backgroundGamecanvas.x = 0;
     backgroundGamecanvas.y = 0;
@@ -401,6 +398,9 @@ Shangrila.prototype.updateCurrentPlayer = function() {
         turnIndicator.name = 'turnIndicator';
         turnIndicator.y = stage.canvas.height * 0.9;
         stage.addChild(turnIndicator);
+    }
+    if(shangrila.setupRound) {
+        shangrila.chosenAction = 'place_master';
     }
 };
 
@@ -612,6 +612,8 @@ Shangrila.prototype.drawVillages = function() {
             text.x = x+width;
             text.y = y+height/2;
             text.textBaseline = 'alphabetic';
+            text.name = 'identify_village_' + i;
+            text.visible = false;
             stage.addChild(text);
         }
     }
@@ -625,10 +627,11 @@ Shangrila.prototype.drawBridges = function() {
         var height = stage.canvas.clientHeight * this.villageHeight;
 
         /* Get x and y positions for source and target villages from villages object */
-        fromVillageId = this.bridges[i]['from'];
-        toVillageId = this.bridges[i]['to'];
-        from = this.villages[fromVillageId];
-        to = this.villages[toVillageId];
+        if(!this.bridges[i]) continue;
+        fromVillageId = shangrila.bridges[i]['from'];
+        toVillageId = shangrila.bridges[i]['to'];
+        from = shangrila.villages[fromVillageId];
+        to = shangrila.villages[toVillageId];
 
         var from_x = shangrila.gameboardWidth * (from['left']/100) + width/2;
         var from_y = stage.canvas.clientHeight * (from['top']/100) + height/2;
@@ -678,6 +681,8 @@ Shangrila.prototype.drawBridges = function() {
             text.x = from_x+((to_x-from_x)/2);
             text.y = from_y+((to_y-from_y)/2);
             text.textBaseline = 'alphabetic';
+            text.name = 'identify_bridge_' + i;
+            text.visible = false;
             stage.addChild(text);
         }
     }
@@ -914,8 +919,8 @@ Shangrila.prototype.placeMaster = function(data, event) {
                 perPlayerLimit = 2;
                 pluralSuffix = 's';
             }
-            if (totalMasterTiles >= limit) {
-                shangrila.showMessage('Sorry, there are already ' + limit + ' masters in this village.');
+            if (totalMasterTiles >= villageLimit) {
+                shangrila.showMessage('Sorry, there are already ' + villageLimit + ' masters in this village.');
             } else if (village.masterTiles[data.player] >= perPlayerLimit) {
                 shangrila.showMessage('Sorry, you already have ' + perPlayerLimit + ' master' + pluralSuffix + ' in this village.');
             } else {

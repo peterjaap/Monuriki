@@ -7,6 +7,7 @@ var path = require('path');
 var express = require('express');
 var app = express();
 var util = require("util");
+var stateMachine;
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', function(req, res) {
@@ -19,295 +20,47 @@ app.get('/', function(req, res) {
 var server = app.listen(8000);
 var io = require('socket.io')(server);
 
-/* Array functions */
-/* Remove item from array */
-Array.prototype.remove = function() {
-    var what, a = arguments, L = a.length, ax;
-    while (L && this.length) {
-        what = a[--L];
-        while ((ax = this.indexOf(what)) !== -1) {
-            this.splice(ax, 1);
-        }
-    }
-    return this;
-};
+eval(fs.readFileSync('tools.js').toString());
 
-/* Pick random element from array */
-Array.prototype.random = function () {
-    return this[Math.floor((Math.random()*this.length))];
-};
-
-/* Shuffle array */
-Array.prototype.shuffle = function() {
-    for(var j, x, i = this.length; i; j = Math.floor(Math.random() * i), x = this[--i], this[i] = this[j], this[j] = x);
-    return this;
-};
-
-/* Return size (length) of object */
-Object.prototype.size = function() {
-    var size = 0, key;
-    for (key in this) {
-        if (this.hasOwnProperty(key)) size++;
-    }
-    return size;
-};
-
-/* Pick random element from object */
-Object.prototype.random = function() {
-    var keys = Object.keys(this);
-    return this[keys[ keys.length * Math.random() << 0]];
-};
-
-/* Configure game data object */
-var staticGameData = {};
-
-/* Define the guilds */
-staticGameData.guilds = ['Healer','Dragonbreather','Firekeeper','Priest','Rainmaker','Astrologer','Yeti-whisperer'];
-
-/* Define positions of villages */
-staticGameData.villages = [];
-staticGameData.villages[0] = {top:14,left:22 };
-staticGameData.villages[1] = {top:34, left:12 };
-staticGameData.villages[2] = {top:60, left:18 };
-staticGameData.villages[3] = {top:16, left:43 };
-staticGameData.villages[4] = {top:30, left:33 };
-staticGameData.villages[5] = {top:49, left:36 };
-staticGameData.villages[6] = {top:70, left:36 };
-staticGameData.villages[7] = {top:21, left:59 };
-staticGameData.villages[8] = {top:38, left:56 };
-staticGameData.villages[9] = {top:60, left:54 };
-staticGameData.villages[10] = {top:65, left:70 };
-staticGameData.villages[11] = {top:50, left:75 };
-staticGameData.villages[12] = {top:30, left:73 };
-
-staticGameData.villageWidth = 0.12;
-staticGameData.villageHeight = 0.12;
-
-/* Define the bridges that connect the villages
- * From and to refers to index key in the staticGameData.villages object above
- */
-staticGameData.bridges = [];
-staticGameData.bridges[0] = {from:0, to:2};
-staticGameData.bridges[1] = {from:2, to:6};
-staticGameData.bridges[2] = {from:0, to:1};
-staticGameData.bridges[3] = {from:1, to:2};
-staticGameData.bridges[4] = {from:0, to:4};
-staticGameData.bridges[5] = {from:4, to:1};
-staticGameData.bridges[6] = {from:1, to:6};
-staticGameData.bridges[7] = {from:0, to:3};
-staticGameData.bridges[8] = {from:4, to:7};
-staticGameData.bridges[9] = {from:3, to:7};
-staticGameData.bridges[10] = {from:4, to:5};
-staticGameData.bridges[11] = {from:5, to:6};
-staticGameData.bridges[12] = {from:5, to:9};
-staticGameData.bridges[13] = {from:5, to:8};
-staticGameData.bridges[14] = {from:6, to:9};
-staticGameData.bridges[15] = {from:9, to:10};
-staticGameData.bridges[16] = {from:8, to:10};
-staticGameData.bridges[17] = {from:11, to:10};
-staticGameData.bridges[18] = {from:7, to:11};
-staticGameData.bridges[19] = {from:7, to:8};
-staticGameData.bridges[20] = {from:3, to:12};
-staticGameData.bridges[21] = {from:7, to:12};
-staticGameData.bridges[22] = {from:12, to:11};
-
-staticGameData.neighbours = [];
-staticGameData.neighbours[0] = [1,2,3,4];
-staticGameData.neighbours[1] = [0,2,4,6];
-staticGameData.neighbours[2] = [0,1,6];
-staticGameData.neighbours[3] = [0,7,12];
-staticGameData.neighbours[4] = [0,1,5,7];
-staticGameData.neighbours[5] = [4,6,8,9];
-staticGameData.neighbours[6] = [1,2,5,9];
-staticGameData.neighbours[7] = [3,4,8,11,12];
-staticGameData.neighbours[8] = [5,7,10];
-staticGameData.neighbours[9] = [5,6,10];
-staticGameData.neighbours[10] = [8,9,11];
-staticGameData.neighbours[11] = [7,10,12];
-staticGameData.neighbours[12] = [3,7,11];
-
-/* Define the colors that are used for the various players */
-/**
- *  - Red (Ro-Tarya)
- *  - Blue (Ba-Lao)
- *  - Yellow (Gyl-Den)
- *  - Violet (Li-Lamas)
- */
-staticGameData.colorNames = ['violet','green','red','blue'];
-staticGameData.colors = {};
-staticGameData.colors['blue'] = {};
-staticGameData.colors['blue']['gamecanvasBackground'] = 'lightblue';
-staticGameData.colors['blue']['controldeckBackground'] = '#7ec1d7';
-
-staticGameData.colors['red'] = {};
-staticGameData.colors['red']['gamecanvasBackground'] = '#f46d6d';
-staticGameData.colors['red']['controldeckBackground'] = '#b80000';
-
-staticGameData.colors['green'] = {};
-staticGameData.colors['green']['gamecanvasBackground'] = '#AEDB92';
-staticGameData.colors['green']['controldeckBackground'] = '#676E11';
-
-staticGameData.colors['violet'] = {};
-staticGameData.colors['violet']['gamecanvasBackground'] = '#e6aaff';
-staticGameData.colors['violet']['controldeckBackground'] = '#58007d';
-
-/* Preset starting placements for 3 players */
-staticGameData.startingPlacements = [];
-staticGameData.startingPlacements[3] = {};
-staticGameData.startingPlacements[3].villages = {};
-staticGameData.startingPlacements[3].villages['village_0'] = {};
-staticGameData.startingPlacements[3].villages['village_0']['player_blue'] = {};
-staticGameData.startingPlacements[3].villages['village_0']['player_red'] = {};
-staticGameData.startingPlacements[3].villages['village_0']['player_blue']['R'] = 1;
-staticGameData.startingPlacements[3].villages['village_0']['player_red']['Y'] = 1;
-staticGameData.startingPlacements[3].villages['village_1'] = {};
-staticGameData.startingPlacements[3].villages['village_1']['player_blue'] = {};
-staticGameData.startingPlacements[3].villages['village_1']['player_red'] = {};
-staticGameData.startingPlacements[3].villages['village_1']['player_blue']['A'] = 1;
-staticGameData.startingPlacements[3].villages['village_1']['player_red']['F'] = 1;
-staticGameData.startingPlacements[3].villages['village_2'] = {};
-staticGameData.startingPlacements[3].villages['village_2']['player_blue'] = {};
-staticGameData.startingPlacements[3].villages['village_2']['player_green'] = {};
-staticGameData.startingPlacements[3].villages['village_2']['player_blue']['P'] = 1;
-staticGameData.startingPlacements[3].villages['village_2']['player_green']['Y'] = 1;
-staticGameData.startingPlacements[3].villages['village_4'] = {};
-staticGameData.startingPlacements[3].villages['village_4']['player_blue'] = {};
-staticGameData.startingPlacements[3].villages['village_4']['player_red'] = {};
-staticGameData.startingPlacements[3].villages['village_4']['player_blue']['Y'] = 1;
-staticGameData.startingPlacements[3].villages['village_4']['player_red']['P'] = 1;
-staticGameData.startingPlacements[3].villages['village_5'] = {};
-staticGameData.startingPlacements[3].villages['village_5']['player_green'] = {};
-staticGameData.startingPlacements[3].villages['village_5']['player_red'] = {};
-staticGameData.startingPlacements[3].villages['village_5']['player_green']['R'] = 1;
-staticGameData.startingPlacements[3].villages['village_5']['player_red']['A'] = 1;
-staticGameData.startingPlacements[3].villages['village_6'] = {};
-staticGameData.startingPlacements[3].villages['village_6']['player_green'] = {};
-staticGameData.startingPlacements[3].villages['village_6']['player_red'] = {};
-staticGameData.startingPlacements[3].villages['village_6']['player_green']['D'] = 1;
-staticGameData.startingPlacements[3].villages['village_6']['player_red']['R'] = 1;
-staticGameData.startingPlacements[3].villages['village_7'] = {};
-staticGameData.startingPlacements[3].villages['village_7']['player_green'] = {};
-staticGameData.startingPlacements[3].villages['village_7']['player_blue'] = {};
-staticGameData.startingPlacements[3].villages['village_7']['player_green']['F'] = 1;
-staticGameData.startingPlacements[3].villages['village_7']['player_blue']['H'] = 1;
-staticGameData.startingPlacements[3].villages['village_8'] = {};
-staticGameData.startingPlacements[3].villages['village_8']['player_green'] = {};
-staticGameData.startingPlacements[3].villages['village_8']['player_blue'] = {};
-staticGameData.startingPlacements[3].villages['village_8']['player_green']['H'] = 1;
-staticGameData.startingPlacements[3].villages['village_8']['player_blue']['D'] = 1;
-staticGameData.startingPlacements[3].villages['village_9'] = {};
-staticGameData.startingPlacements[3].villages['village_9']['player_red'] = {};
-staticGameData.startingPlacements[3].villages['village_9']['player_blue'] = {};
-staticGameData.startingPlacements[3].villages['village_9']['player_red']['H'] = 1;
-staticGameData.startingPlacements[3].villages['village_9']['player_blue']['F'] = 1;
-staticGameData.startingPlacements[3].villages['village_10'] = {};
-staticGameData.startingPlacements[3].villages['village_10']['player_green'] = {};
-staticGameData.startingPlacements[3].villages['village_10']['player_green']['A'] = 1;
-staticGameData.startingPlacements[3].villages['village_11'] = {};
-staticGameData.startingPlacements[3].villages['village_11']['player_red'] = {};
-staticGameData.startingPlacements[3].villages['village_11']['player_green'] = {};
-staticGameData.startingPlacements[3].villages['village_11']['player_red']['D'] = 1;
-staticGameData.startingPlacements[3].villages['village_11']['player_green']['P'] = 1;
-
-/* Preset starting placements for 4 players */
-staticGameData.startingPlacements[4] = {};
-staticGameData.startingPlacements[4].villages = {};
-staticGameData.startingPlacements[4].villages['village_0'] = {};
-staticGameData.startingPlacements[4].villages['village_0']['player_violet'] = {};
-staticGameData.startingPlacements[4].villages['village_0']['player_red'] = {};
-staticGameData.startingPlacements[4].villages['village_0']['player_violet']['Y'] = 1;
-staticGameData.startingPlacements[4].villages['village_0']['player_violet']['F'] = 1;
-staticGameData.startingPlacements[4].villages['village_0']['player_red']['H'] = 1;
-staticGameData.startingPlacements[4].villages['village_2'] = {};
-staticGameData.startingPlacements[4].villages['village_2']['player_blue'] = {};
-staticGameData.startingPlacements[4].villages['village_2']['player_green'] = {};
-staticGameData.startingPlacements[4].villages['village_2']['player_red'] = {};
-staticGameData.startingPlacements[4].villages['village_2']['player_blue']['A'] = 1;
-staticGameData.startingPlacements[4].villages['village_2']['player_green']['P'] = 1;
-staticGameData.startingPlacements[4].villages['village_2']['player_red']['F'] = 1;
-staticGameData.startingPlacements[4].villages['village_3'] = {};
-staticGameData.startingPlacements[4].villages['village_3']['player_green'] = {};
-staticGameData.startingPlacements[4].villages['village_3']['player_red'] = {};
-staticGameData.startingPlacements[4].villages['village_3']['player_red']['A'] = 1;
-staticGameData.startingPlacements[4].villages['village_3']['player_green']['D'] = 1;
-staticGameData.startingPlacements[4].villages['village_4'] = {};
-staticGameData.startingPlacements[4].villages['village_4']['player_red'] = {};
-staticGameData.startingPlacements[4].villages['village_4']['player_blue'] = {};
-staticGameData.startingPlacements[4].villages['village_4']['player_red']['P'] = 1;
-staticGameData.startingPlacements[4].villages['village_4']['player_blue']['Y'] = 1;
-staticGameData.startingPlacements[4].villages['village_5'] = {};
-staticGameData.startingPlacements[4].villages['village_5']['player_red'] = {};
-staticGameData.startingPlacements[4].villages['village_5']['player_green'] = {};
-staticGameData.startingPlacements[4].villages['village_5']['player_violet'] = {};
-staticGameData.startingPlacements[4].villages['village_5']['player_red']['R'] = 1;
-staticGameData.startingPlacements[4].villages['village_5']['player_green']['A'] = 1;
-staticGameData.startingPlacements[4].villages['village_5']['player_violet']['P'] = 1;
-staticGameData.startingPlacements[4].villages['village_7'] = {};
-staticGameData.startingPlacements[4].villages['village_7']['player_blue'] = {};
-staticGameData.startingPlacements[4].villages['village_7']['player_blue']['F'] = 1;
-staticGameData.startingPlacements[4].villages['village_7']['player_blue']['H'] = 1;
-staticGameData.startingPlacements[4].villages['village_8'] = {};
-staticGameData.startingPlacements[4].villages['village_8']['player_green'] = {};
-staticGameData.startingPlacements[4].villages['village_8']['player_blue'] = {};
-staticGameData.startingPlacements[4].villages['village_8']['player_green']['R'] = 1;
-staticGameData.startingPlacements[4].villages['village_8']['player_blue']['D'] = 1;
-staticGameData.startingPlacements[4].villages['village_8']['player_green']['H'] = 1;
-staticGameData.startingPlacements[4].villages['village_9'] = {};
-staticGameData.startingPlacements[4].villages['village_9']['player_violet'] = {};
-staticGameData.startingPlacements[4].villages['village_9']['player_green'] = {};
-staticGameData.startingPlacements[4].villages['village_9']['player_violet']['D'] = 1;
-staticGameData.startingPlacements[4].villages['village_9']['player_green']['F'] = 1;
-staticGameData.startingPlacements[4].villages['village_9']['player_violet']['H'] = 1;
-staticGameData.startingPlacements[4].villages['village_10'] = {};
-staticGameData.startingPlacements[4].villages['village_10']['player_blue'] = {};
-staticGameData.startingPlacements[4].villages['village_10']['player_green'] = {};
-staticGameData.startingPlacements[4].villages['village_10']['player_blue']['R'] = 1;
-staticGameData.startingPlacements[4].villages['village_10']['player_blue']['P'] = 1;
-staticGameData.startingPlacements[4].villages['village_10']['player_green']['Y'] = 1;
-staticGameData.startingPlacements[4].villages['village_11'] = {};
-staticGameData.startingPlacements[4].villages['village_11']['player_violet'] = {};
-staticGameData.startingPlacements[4].villages['village_11']['player_red'] = {};
-staticGameData.startingPlacements[4].villages['village_11']['player_violet']['R'] = 1;
-staticGameData.startingPlacements[4].villages['village_11']['player_red']['D'] = 1;
-staticGameData.startingPlacements[4].villages['village_11']['player_red']['Y'] = 1;
-
-/* Misc */
-staticGameData.numberOfActiveMessages = 0;
-staticGameData.messageHistory = [];
-staticGameData.autoSetupRound = false;
-staticGameData.presetStartingPositions = true;
-
-/* Configure initial statemachine */
-var stateMachine = {};
-stateMachine['villages'] = {}; // empty array to hold villages information
-stateMachine['current_round'] = null; // keep track of which round we are in
-stateMachine['currentPlayer'] = null; // keep track of which player is currently playing
-stateMachine['local_player'] = null;
-stateMachine['activePlayers'] = {};
-stateMachine['activePlayersColors'] = [];
-stateMachine['activePlayersColors']['blue'] = null;
-stateMachine['activePlayersColors']['red'] = null;
-stateMachine['activePlayersColors']['green'] = null;
-stateMachine['activePlayersColors']['violet'] = null;
-stateMachine['playerOrder'] = ['blue','red','green','violet']; // for singleplayer
-stateMachine['playerOrder'] = stateMachine['playerOrder'].shuffle(); // random order through shuffling
-stateMachine['setupRound'] = true;
-for(i=0;i<staticGameData.villages.length;i++) {
-    stateMachine['villages']['village_' + i] = {};
-    for(j=0;j<staticGameData.colorNames.length;j++) {
-        stateMachine['villages']['village_' + i]['player_' + stateMachine.playerOrder[j]] = {};
-        for(k=0;k<staticGameData.guilds.length;k++) {
-            stateMachine['villages']['village_' + i]['player_' + stateMachine.playerOrder[j]][staticGameData.guilds[k].substr(0,1)] = 0;
-        }
-    }
-}
-stateMachine.studentsPlacedInThisRound = 0;
-stateMachine.neighbours = staticGameData.neighbours;
+/* Include static game data */
+eval(fs.readFileSync('staticGameData.js').toString());
 
 // Log complete state machine
 function logSM() {
     util.log(util.inspect(stateMachine,{showHidden:false,depth:10}));
 }
+
+function resetStateMachine() {
+    /* Configure initial statemachine */
+    stateMachine = {};
+    stateMachine['villages'] = {}; // empty array to hold villages information
+    stateMachine['current_round'] = null; // keep track of which round we are in
+    stateMachine['currentPlayer'] = null; // keep track of which player is currently playing
+    stateMachine['local_player'] = null;
+    stateMachine['activePlayers'] = {};
+    stateMachine['activePlayersColors'] = [];
+    stateMachine['activePlayersColors']['blue'] = null;
+    stateMachine['activePlayersColors']['red'] = null;
+    stateMachine['activePlayersColors']['green'] = null;
+    stateMachine['activePlayersColors']['violet'] = null;
+    stateMachine['playerOrder'] = ['blue','red','green','violet']; // for singleplayer
+    stateMachine['playerOrder'] = stateMachine['playerOrder'].shuffle(); // random order through shuffling
+    stateMachine['setupRound'] = true;
+    for(i=0;i<staticGameData.villagePositions.length;i++) {
+        stateMachine['villages']['village_' + i] = {};
+        for(j=0;j<staticGameData.colorNames.length;j++) {
+            stateMachine['villages']['village_' + i]['player_' + stateMachine.playerOrder[j]] = {};
+            for(k=0;k<staticGameData.guilds.length;k++) {
+                stateMachine['villages']['village_' + i]['player_' + stateMachine.playerOrder[j]][staticGameData.guilds[k].substr(0,1)] = 0;
+            }
+        }
+    }
+    stateMachine.studentsPlacedInThisRound = 0;
+    stateMachine.neighbours = staticGameData.neighbours;
+    return stateMachine;
+}
+
+stateMachine = resetStateMachine();
 
 // Listen for server side events
 io.sockets.on('connection', function (socket) {
@@ -324,20 +77,37 @@ io.sockets.on('connection', function (socket) {
     // Asynchronous functions
     // Set action what to do when player disconnects
     socket.on('disconnect', function () {
-        util.log("Player has disconnected: "+this.id);
-        if(stateMachine.activePlayers.hasOwnProperty(this.id)) {
-            colorName = stateMachine.activePlayers[this.id];
-            stateMachine.activePlayersColors[colorName] = null;
-            // If the game initiator leaves the game, select a random new game initiator
-            if(stateMachine.gameInitiator == colorName) {
-                stateMachine.gameInitiator = stateMachine.activePlayers.random();
-                console.log('New game initiator is ' + stateMachine.gameInitiator);
-                io.sockets.emit('_updateStateMachineValue', {
-                    gameInitiator:stateMachine.gameInitiator
+        util.log("Player has disconnected: " + this.id);
+        if(stateMachine.setupRound == false) {
+            if (stateMachine.activePlayers.hasOwnProperty(this.id)) {
+                colorName = stateMachine.activePlayers[this.id];
+                stateMachine = resetStateMachine();
+                io.sockets.emit('_setInitialGameData', {
+                    staticGameData: staticGameData,
+                    stateMachine: stateMachine
                 });
+                io.sockets.emit('_showSplashScreen');
+                setTimeout(function () {
+                    io.sockets.emit('message', 'Player ' + colorName + ' quit; game ended.');
+                }, 500);
+            } else {
+                console.log('Fatal error; disconnecting player not found in client list.');
             }
-            // Remove player from stateMachine
-            delete stateMachine.activePlayers[this.id];
+        } else {
+            if (stateMachine.activePlayers.hasOwnProperty(this.id)) {
+                colorName = stateMachine.activePlayers[this.id];
+                stateMachine.activePlayersColors[colorName] = null;
+                // If the game initiator leaves the game, select a random new game initiator
+                if (stateMachine.gameInitiator == colorName) {
+                    stateMachine.gameInitiator = stateMachine.activePlayers.random();
+                    console.log('New game initiator is ' + stateMachine.gameInitiator);
+                    io.sockets.emit('_updateStateMachineValue', {
+                        gameInitiator: stateMachine.gameInitiator
+                    });
+                }
+                // Remove player from stateMachine
+                delete stateMachine.activePlayers[this.id];
+            }
         }
         console.log('Current players; ');
         util.log(util.inspect(stateMachine.activePlayers,{showHidden:false,depth:10}));
@@ -377,7 +147,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     // Game initiator has started a new game
-    socket.on('__initNewGame', function() {
+    socket.on('__initNewGame', function(options) {
         // Set player order
         var playerOrder = [];
         for(var playerClientId in stateMachine.activePlayers) {
@@ -392,19 +162,21 @@ io.sockets.on('connection', function (socket) {
         stateMachine.setupRound = true;
         /* Remove village 12 and its bridges when it is a 3-player game */
         if(stateMachine.playerOrder.length == 3) {
-            staticGameData.villages.splice(-1,1);
-            staticGameData.bridges.splice(-3,3);
+            villages = staticGameData.villagePositions;
+            villages.splice(-1,1);
+            bridges = staticGameData.bridgePositions;
+            bridges.splice(-3,3);
             delete stateMachine['villages']['village_12'];
             io.sockets.emit('_updateGameData', {
-                bridges: staticGameData.bridges,
-                villages: staticGameData.villages
+                bridges: bridges,
+                villages: villages
             });
         }
 
         io.sockets.emit('_initNewGame');
-        if(stateMachine.setupRound && staticGameData.presetStartingPositions) {
+        if(stateMachine.setupRound && options.presetStartingPositions) {
             // Combine starting positions with staticGameData
-            for(i=0;i<staticGameData.villages.length;i++) {
+            for(i=0;i<staticGameData.villagePositions.length;i++) {
                 for(j=0;j<staticGameData.colorNames.length;j++) {
                     for(k=0;k<staticGameData.guilds.length;k++) {
                         if(typeof staticGameData.startingPlacements[stateMachine.playerOrder.length].villages['village_' + i] != 'undefined') {
@@ -453,11 +225,11 @@ io.sockets.on('connection', function (socket) {
         });
         // Find bridge
         bridge_id = false;
-        for(bridge in staticGameData.bridges) {
+        for(bridge in staticGameData.bridgePositions) {
             if(
-                (staticGameData.bridges[bridge].from == data.fromVillage && staticGameData.bridges[bridge].to == data.toVillage)
+                (staticGameData.bridgePositions[bridge].from == data.fromVillage && staticGameData.bridgePositions[bridge].to == data.toVillage)
                 ||
-                (staticGameData.bridges[bridge].to == data.fromVillage && staticGameData.bridges[bridge].from == data.toVillage)
+                (staticGameData.bridgePositions[bridge].to == data.fromVillage && staticGameData.bridgePositions[bridge].from == data.toVillage)
             )
             {
                 bridge_id = bridge;
@@ -581,7 +353,7 @@ io.sockets.on('connection', function (socket) {
         if(stateMachine.setupRound == true) {
             // Calculate end of turn
             total = [];
-            for(i=0;i<staticGameData.villages.length;i++) {
+            for(i=0;i<staticGameData.villagePositions.length;i++) {
                 for(j=0;j<stateMachine.playerOrder.length;j++) {
                     for(k=0;k<staticGameData.guilds.length;k++) {
                         guilds = stateMachine['villages']['village_' + i]['player_' + stateMachine.playerOrder[j]][staticGameData.guilds[k].substr(0,1)];
@@ -674,7 +446,7 @@ io.sockets.on('connection', function (socket) {
     });
 
     function getRandomVillageForAutoSetupRound() {
-        return Math.floor(Math.random(0,1)*staticGameData.villages.length);
+        return Math.floor(Math.random(0,1)*staticGameData.villagePositions.length);
     }
 
     function getRandomGuildForAutoSetupRound() {
