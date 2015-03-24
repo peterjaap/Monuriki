@@ -130,11 +130,13 @@ Shangrila.prototype.splashScreen = function() {
             character.color = colorName;
 
             character.addEventListener('mouseover', function (event) {
+                document.body.style.cursor='pointer';
                 event.target.scaleX = 0.9;
                 event.target.scaleY = 0.9;
                 event.target.alpha = 1;
             });
             character.addEventListener('mouseout', function (event) {
+                document.body.style.cursor='default';
                 event.target.scaleX = 0.8;
                 event.target.scaleY = 0.8;
                 event.target.alpha = 0.8;
@@ -256,9 +258,11 @@ Shangrila.prototype.lobby = function() {
         // Set color and add mouse over effects
         startButtonShape.color = shangrila.colorNames[i];
         startButtonShape.addEventListener('mouseover', function(event) {
+            document.body.style.cursor='pointer';
             event.target.alpha = .50;
         });
         startButtonShape.addEventListener('mouseout', function(event) {
+            document.body.style.cursor='default';
             event.target.alpha = 1;
 
         });
@@ -419,15 +423,20 @@ Shangrila.prototype.drawMenu = function() {
     height = stage.canvas.width*0.25;
     x = (stage.canvas.width - width) / 2;
     y = (stage.canvas.height - height) / 3;
+
+    var modalMenuBackground = new createjs.Bitmap(loader.getResult('menu_background'));
     var menu = new createjs.Graphics().beginFill('white').rect(x, y, width, height);
-    var menuShape = new createjs.Shape(menu);
-    menuShape.name = 'menu';
-    menuScreen.addChild(menuShape);
+    modalMenuBackground.x = x;
+    modalMenuBackground.y = y;
+    modalMenuBackground.scaleX = width / modalMenuBackground.getBounds().width;
+    modalMenuBackground.scaleY = height / modalMenuBackground.getBounds().height;
+    modalMenuBackground.name = 'menu';
+    menuScreen.addChild(modalMenuBackground);
 
     var menuTitle = 'Choose action';
     var titleText = new createjs.Text(menuTitle, '30px Arial','black');
     titleText.x = x + ((width - titleText.getBounds().width) / 2);
-    titleText.y = y + titleText.getBounds().height;
+    titleText.y = y + titleText.getBounds().height * 1.5;
     menuScreen.addChild(titleText);
 
     var menuOptions = ['Place master','Place students','Move students'];
@@ -442,10 +451,12 @@ Shangrila.prototype.drawMenu = function() {
             optionText.hitArea = new createjs.Shape(new createjs.Graphics().beginFill('#000').drawRect(0,0,textWidth,textHeight));
 
             optionText.on('mouseover', function (e) {
+                document.body.style.cursor='pointer';
                 e.target.color = 'black';
             });
 
             optionText.on('mouseout', function (e) {
+                document.body.style.cursor='default';
                 e.target.color = 'grey';
             });
 
@@ -474,6 +485,7 @@ Shangrila.prototype.drawMenu = function() {
                         if(village) {
                             // Increase village in size when hovering
                             village.addEventListener('mouseover', function (e) {
+                                document.body.style.cursor='pointer';
                                 oldWidth = e.target.getBounds().width;
                                 oldHeight = e.target.getBounds().height;
                                 e.target.scaleX = e.target.scaleX * 1.1;
@@ -487,6 +499,7 @@ Shangrila.prototype.drawMenu = function() {
                             });
                             // Back to original state
                             village.addEventListener('mouseout', function (e) {
+                                document.body.style.cursor='default';
                                 oldWidth = e.target.getBounds().width;
                                 oldHeight = e.target.getBounds().height;
                                 e.target.scaleX = e.target.scaleX / 1.1;
@@ -782,9 +795,11 @@ Shangrila.prototype.drawGuildShields = function() {
         guildShape.scaleX = guildWidth / guildShape.getBounds().width;
         guildShape.scaleY = guildShape.scaleX;
         guildShape.addEventListener('mouseover', function(event) {
+            document.body.style.cursor='pointer';
             event.target.alpha = .50;
         });
         guildShape.addEventListener('mouseout', function(event) {
+            document.body.style.cursor='default';
             event.target.alpha = 1;
         });
         stage.addChild(guildShape);
@@ -811,7 +826,7 @@ Shangrila.prototype.drawGuildShields = function() {
         }
 
         /* Small guilds for on the villages */
-        guildWidthSmall = guildWidth * 0.5;
+        guildWidthSmall = guildWidth * 0.7;
         guildHeightSmall = guildHeight * 0.5;
         paddingSmall = padding * 0.1;
 
@@ -819,55 +834,55 @@ Shangrila.prototype.drawGuildShields = function() {
         for(j=0;j<this.villages.length;j++) {
             villageObject = stage.getChildByName('village_' + j);
 
-            y = villageObject.y;
-            x = villageObject.x;
+            // Move starting position relative from village object
+            x = villageObject.x - villageObject.getTransformedBounds().width * 0.2;
+            y = villageObject.y - villageObject.getTransformedBounds().height * 0.1;
 
             /* Position small shields in grid of 2, 3, 2 over the villages */
-            y += guildWidth * .26123302;
-            x += (guildWidth * .26123302) / 2;
-            if(i <= 1) {
-
-            } else if(i > 1 && i <= 4) {
-                y += (guildWidth * .26123302)*2.5;
-                x -= guildWidth * 1.880877743;
-            } else if(i > 4) {
-                y += guildWidth * 1.306165099;
-                x -= guildWidth * 3.657262278;
+            fullWidth = villageObject.getBounds().width; // 299
+            increment = fullWidth / 12 / 2;
+            if(i == 0) {
+                x += increment * 4.5;
+                y += increment * 0.75;
+            } else if(i == 1) {
+                x += increment * 7.5;
+                y += increment * 0.75;
+            } else if(i == 2) {
+                x += increment * 3;
+                y += increment * 3;
+            } else if(i == 3) {
+                x += increment * 6;
+                y += increment * 3;
+            } else if(i == 4) {
+                x += increment * 9;
+                y += increment * 3;
+            } else if(i == 5) {
+                x += increment * 4.5;
+                y += increment * 5.25;
+            } else if(i == 6) {
+                x += increment * 7.5;
+                y += increment * 5.25;
             }
 
-            x += ((i+1) * (guildWidthSmall + (guildWidth * .26123302)));
-
-            var guildSmall = new createjs.Graphics().beginStroke('black').setStrokeStyle(1).beginFill('lightgrey').rect(
-                x,
-                y,
-                guildWidthSmall,
-                guildHeightSmall
-            ).endFill();
-
-            var guildShapeSmall = new createjs.Shape(guildSmall);
-            guildShapeSmall.setBounds(x,y,guildWidthSmall,guildHeightSmall);
+            var guildShapeSmall = new createjs.Bitmap(loader.getResult('shield-white'));
+            guildShapeSmall.x = x;
+            guildShapeSmall.y = y;
+            guildShapeSmall.scaleX = guildWidthSmall / guildShapeSmall.getBounds().width;
+            guildShapeSmall.scaleY = guildShapeSmall.scaleX;
             guildShapeSmall.name = 'guild_shape_small_' + i + '_' + j;
             guildShapeSmall.guildName = guildName;
             guildShapeSmall.guild_id = i;
             guildShapeSmall.village_id = j;
             guildShapeSmall.addEventListener('mouseover', function(event) {
                 if(shangrila.chosenAction == 'place_master') {
-                    event.target.graphics.beginFill(shangrila.local_player).rect(
-                        event.target.getBounds().x,
-                        event.target.getBounds().y,
-                        event.target.getBounds().width,
-                        event.target.getBounds().height
-                    ).endFill();
+                    document.body.style.cursor='pointer';
+                    event.target.image = loader.getResult('shield-' + shangrila.local_player);
                 }
             });
             guildShapeSmall.addEventListener('mouseout', function(event) {
                 if(shangrila.chosenAction == 'place_master') {
-                    event.target.graphics.beginFill('lightgrey').rect(
-                        event.target.getBounds().x,
-                        event.target.getBounds().y,
-                        event.target.getBounds().width,
-                        event.target.getBounds().height
-                    ).endFill();
+                    document.body.style.cursor='default';
+                    event.target.image = loader.getResult('shield-white');
                 }
             });
             guildShapeSmall.addEventListener('click', function(event) {
@@ -883,10 +898,16 @@ Shangrila.prototype.drawGuildShields = function() {
             stage.addChild(guildShapeSmall);
 
             var initial = new createjs.Text(guildName.substr(0,1),(guildWidth / 3) + 'px Arial','black');
-            initial.x = x + 5;
-            initial.y = y + 3;
-            initial.name = 'guild_small_initial_blue_'  + guildName.substr(0,1);
+            initial.x = x + 9;
+            initial.y = y + 4;
+            initial.name = 'guild_small_initial_' + j + '_' + guildName.substr(0,1);
             stage.addChild(initial);
+
+            var masterStudentIdentifier = new createjs.Text('',(guildWidth / 4) + 'px Arial','black');
+            masterStudentIdentifier.x = x;
+            masterStudentIdentifier.y = y + 18;
+            masterStudentIdentifier.name = 'guild_small_ms_identifier_' + j + '_' + guildName.substr(0,1);
+            stage.addChild(masterStudentIdentifier);
         }
     }
 };
@@ -894,7 +915,6 @@ Shangrila.prototype.drawGuildShields = function() {
 /* Draws the master on the chosen city for a certain player */
 Shangrila.prototype.placeMaster = function(data, event) {
     var village = stage.getChildByName('village_' + data.village_id);
-    var guildShapeSmall = stage.getChildByName('guild_shape_small_' + data.guild_id + '_' + data.village_id);
     var amount = stage.getChildByName('guild_amount_' + data.player + '_' + data.guildName.substr(0,1));
 
     if(data.player == shangrila.currentPlayer) {
@@ -985,26 +1005,19 @@ Shangrila.prototype.updateGuildShield = function(data) {
 
     mastersOnGuild = stateMachine.villages['village_' + data.village_id]['player_' + data.player][data.guildName.substr(0,1)];
 
+    guildShapeSmall.image = loader.getResult('shield-' + data.player);
+    masterStudentIdentifier = stage.getChildByName('guild_small_ms_identifier_' + data.village_id + '_' + data.guildName.substr(0,1));
+    guildSmallInitial = stage.getChildByName('guild_small_initial_' + data.village_id + '_' + data.guildName.substr(0,1));
+
+    masterStudentIdentifier.color = 'white';
+    guildSmallInitial.color = 'white';
+
     if(data.typeOfPlacing == 'master') {
-        guildShapeSmall.graphics.beginFill(data.player).rect(
-            guildShapeSmall.getBounds().x,
-            guildShapeSmall.getBounds().y,
-            guildShapeSmall.getBounds().width,
-            guildShapeSmall.getBounds().height
-        ).endFill();
+        masterStudentIdentifier.text = 'm';
+        masterStudentIdentifier.x += 10;
     } else if(data.typeOfPlacing == 'student') {
-        x = guildShapeSmall.getBounds().x;
-        y = guildShapeSmall.getBounds().y;
-        guildWidthSmall = guildShapeSmall.getBounds().width;
-        guildHeightSmall = guildShapeSmall.getBounds().height;
-
-        line2 = new createjs.Shape();
-        line2.graphics.beginStroke('#666').setStrokeStyle(1).moveTo(x,y).lineTo((x+guildWidthSmall),(y+guildHeightSmall)).endStroke();
-        stage.addChild(line2);
-
-        line2 = new createjs.Shape();
-        line2.graphics.beginStroke('#666').setStrokeStyle(1).moveTo(x,(y+guildHeightSmall)).lineTo((x+guildWidthSmall),y).endStroke();
-        stage.addChild(line2);
+        masterStudentIdentifier.text = 'm+s';
+        masterStudentIdentifier.x += 5;
     }
 
     guildShapeSmall.removeAllEventListeners();

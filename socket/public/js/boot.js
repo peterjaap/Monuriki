@@ -58,7 +58,9 @@ document.addEventListener('DOMContentLoaded', function(){
             {id:'shield-red', src:'images/shield-red.png'},
             {id:'shield-green', src:'images/shield-green.png'},
             {id:'shield-blue', src:'images/shield-blue.png'},
-            {id:'shield-violet', src:'images/shield-violet.png'}
+            {id:'shield-violet', src:'images/shield-violet.png'},
+            {id:'shield-white', src:'images/shield-white.png'},
+            {id:'shield-grey', src:'images/shield-grey.png'}
         ]
     );
 
