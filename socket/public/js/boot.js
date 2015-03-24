@@ -78,7 +78,7 @@ document.onkeyup = function (event) {
             }
         }
         for(i=0;i<25;i++) {
-            object = stage.getChildByName('identify_broidge_' + i);
+            object = stage.getChildByName('identify_bridge_' + i);
             if(object) {
                 object.visible = !object.visible;
             }
