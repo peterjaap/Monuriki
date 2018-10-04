@@ -4,6 +4,11 @@ Monuriki is a digital board game and is based on The Bridges of Shangrila. This 
 
 As a fun exercise and to familiarize myself with building games in HTML5/JS, I've set out to create this game in a digital form pure as a hobby.
 
+# Getting started
+
+* Make sure to have [nodejs](https://nodejs.org/) installed
+* Then `cd socket` and `node app.js`
+
 # Screenshots
 These are obviously screenshots from the devving-in-progress stage.
 ![screenshot 2015-03-22 14 53 58](https://cloud.githubusercontent.com/assets/431360/6783588/d0a787be-d17a-11e4-9b87-4e9ded857635.png)
